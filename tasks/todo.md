@@ -5,14 +5,17 @@
 ### Plan
 
 - [x] Confirm the production work currently exists only on a draft branch inside the contributors' repository.
-- [ ] Create a clean root snapshot so the personal repository does not inherit shared contributor history.
-- [ ] Create `ARJUNVARMA2000/Financial-RAG-Personal` and publish the snapshot as `main`.
-- [ ] Verify repository ownership, README links, CI, live deployment, and local/remote parity.
-- [ ] Close the old draft PR and remove only `codex/production-rag-overhaul` from the contributors' repository.
+- [x] Create a clean root snapshot so the personal repository does not inherit shared contributor history.
+- [x] Create `ARJUNVARMA2000/Financial-RAG-Personal` and publish the snapshot as `main`.
+- [x] Verify repository ownership, README links, CI, live deployment, and local/remote parity.
+- [x] Close the old draft PR and remove only `codex/production-rag-overhaul` from the contributors' repository.
 
 ### Implementation review
 
-- In progress.
+- Created the private, sole-collaborator repository `ARJUNVARMA2000/Financial-RAG-Personal` with a parentless root snapshot, so the shared project's commit and contributor history were not inherited.
+- The personal repository's `main` contains the complete production workspace and links only to the `arjun-finrag-*` deployment; its independent GitHub Actions quality workflow passes.
+- Repointed this workspace's sole Git remote to the personal repository and made local `main` track `origin/main`.
+- Closed old PR #1, deleted only the old `codex/production-rag-overhaul` branch, and verified the contributors' `main` remains unchanged at `d04b1b1` with its original site link.
 
 ## Canonical deployment documentation - 2026-07-17
 
