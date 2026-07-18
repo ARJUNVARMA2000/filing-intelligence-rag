@@ -17,11 +17,11 @@ An evidence-first financial research workspace for asking questions across filin
 
 </details>
 
-## Personal production deployment
+## Live portfolio demo
 
-- [Research workspace](https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app)
-- [API readiness](https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app/health/ready)
-- [Data coverage](https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app/health/data)
+- [Research workspace](https://finrag-research-7pj7nolpla-uc.a.run.app)
+- [API readiness](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/ready)
+- [Data coverage](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/data)
 
 ## What is implemented
 
@@ -100,7 +100,7 @@ python scripts/build_index.py --all --fresh
 
 Quartr Public API access is a separate commercial entitlement; access to the Quartr web application does not include API credentials. This project intentionally does not scrape or bulk-download the signed-in website. Reports and transcripts downloaded individually through an authorized workflow can still be placed under `data/raw/<ticker>/` and indexed with the same build command.
 
-The packaged production corpus currently contains 15 tickers: `AAPL`, `ADS`, `AMZN`, `COST`, `IBM`, `JNJ`, `JPM`, `LOW`, `META`, `NFLX`, `NVDA`, `TGT`, `TSLA`, `V`, and `WMT`. Extend the corpus by adding source documents or by running an entitled API refresh, then perform a clean index rebuild and deployment. The live [data coverage endpoint](https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app/health/data) is the source of truth for deployed freshness and coverage.
+The packaged production corpus currently contains 15 tickers: `AAPL`, `ADS`, `AMZN`, `COST`, `IBM`, `JNJ`, `JPM`, `LOW`, `META`, `NFLX`, `NVDA`, `TGT`, `TSLA`, `V`, and `WMT`. Extend the corpus by adding source documents or by running an entitled API refresh, then perform a clean index rebuild and deployment. The live [data coverage endpoint](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/data) is the source of truth for deployed freshness and coverage.
 
 See [DATA_FRESHNESS.md](DATA_FRESHNESS.md) for watermarks, storage, scheduling, and operational requirements.
 
@@ -118,8 +118,8 @@ The test suite covers API contracts, auth boundaries, provider failures, query p
 
 ```powershell
 python scripts/smoke_deployment.py `
-  --backend https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app `
-  --frontend https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app
+  --backend https://finrag-research-api-7pj7nolpla-uc.a.run.app `
+  --frontend https://finrag-research-7pj7nolpla-uc.a.run.app
 ```
 
 ## Configuration
@@ -139,8 +139,8 @@ The API rejects unknown request fields, invalid ticker/period formats, retrieval
 
 - `Dockerfile.backend` packages the API and versioned Chroma archive.
 - `Dockerfile.frontend` installs only UI/runtime-auth dependencies.
-- `cloudbuild.yaml` tests, builds, pushes, and deploys the personal `arjun-finrag-backend` and `arjun-finrag-frontend` Cloud Run services with explicit production auth and readiness probes.
-- `cloudbuild.refresh.yaml` synchronizes the corpus, rebuilds the index, publishes durable state, and deploys an immutable `arjun-finrag-backend` revision.
+- `cloudbuild.yaml` tests, builds, pushes, and deploys the portfolio `finrag-research-api` and `finrag-research` Cloud Run services with explicit production auth and readiness probes.
+- `cloudbuild.refresh.yaml` synchronizes the corpus, rebuilds the index, publishes durable state, and deploys an immutable `finrag-research-api` revision.
 
 Deployment is explicit: the local test suite never mutates cloud resources. Review substitutions, IAM service accounts, Secret Manager grants, Artifact Registry, and the document bucket before running either build.
 

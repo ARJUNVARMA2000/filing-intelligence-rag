@@ -183,18 +183,18 @@ def test_identity_guard_rejects_missing_token_in_production(
         get_app_settings.cache_clear()
 
 
-def test_cloudbuild_defaults_target_the_isolated_personal_services() -> None:
+def test_cloudbuild_defaults_target_the_portfolio_services() -> None:
     project_root = Path(__file__).resolve().parents[1]
     standard = (project_root / "cloudbuild.yaml").read_text(encoding="utf-8")
     refresh = (project_root / "cloudbuild.refresh.yaml").read_text(encoding="utf-8")
 
-    assert "_BACKEND_SERVICE: arjun-finrag-backend" in standard
-    assert "_FRONTEND_SERVICE: arjun-finrag-frontend" in standard
-    assert "_BACKEND_SERVICE: arjun-finrag-backend" in refresh
-    assert "https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app" in standard
-    assert "https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app" in standard
-    assert "https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app" in refresh
-    assert "https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app" in refresh
+    assert "_BACKEND_SERVICE: finrag-research-api" in standard
+    assert "_FRONTEND_SERVICE: finrag-research" in standard
+    assert "_BACKEND_SERVICE: finrag-research-api" in refresh
+    assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in standard
+    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in standard
+    assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in refresh
+    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in refresh
     assert "\n      - finrag-backend\n" not in standard
     assert "\n      - finrag-frontend\n" not in standard
     assert "\n      - finrag-backend\n" not in refresh
@@ -204,7 +204,7 @@ def test_cloudbuild_defaults_target_the_isolated_personal_services() -> None:
     assert "https://finrag-frontend-7pj7nolpla-uc.a.run.app" not in refresh
 
 
-def test_user_facing_docs_publish_only_the_personal_deployment() -> None:
+def test_user_facing_docs_publish_only_the_portfolio_deployment() -> None:
     project_root = Path(__file__).resolve().parents[1]
     docs = {
         name: (project_root / name).read_text(encoding="utf-8")
@@ -215,6 +215,6 @@ def test_user_facing_docs_publish_only_the_personal_deployment() -> None:
         assert "https://finrag-backend-7pj7nolpla-uc.a.run.app" not in content
         assert "https://finrag-frontend-7pj7nolpla-uc.a.run.app" not in content
 
-    assert "https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app" in docs["README.md"]
+    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in docs["README.md"]
     for content in docs.values():
-        assert "https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app" in content
+        assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in content

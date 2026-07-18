@@ -14,11 +14,11 @@ python -m zipfile -e chroma_index.zip data/indexes
 
 ## Production mode
 
-Current personal deployment:
+Portfolio deployment:
 
-- [Research workspace](https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app)
-- [API readiness](https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app/health/ready)
-- [Data coverage](https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app/health/data)
+- [Research workspace](https://finrag-research-7pj7nolpla-uc.a.run.app)
+- [API readiness](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/ready)
+- [Data coverage](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/data)
 
 Production requires:
 
@@ -31,7 +31,7 @@ Production requires:
 
 The backend can remain network-reachable for public source documents while the paid `/chat` routes verify a Google-signed identity token. For stricter isolation, split source delivery into a separate public service and enforce Cloud Run IAM on the API service.
 
-The default Cloud Build configuration targets the `arjun-finrag-backend` and `arjun-finrag-frontend` services:
+The default Cloud Build configuration targets the `finrag-research-api` and `finrag-research` services:
 
 ```powershell
 gcloud builds submit --config cloudbuild.yaml --project agentic-ai-487000 .

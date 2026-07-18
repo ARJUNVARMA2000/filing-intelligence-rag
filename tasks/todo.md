@@ -1,44 +1,58 @@
 # Production-Grade Financial RAG Overhaul
 
-## Clean personal repository separation - 2026-07-17
+## Portfolio product rebrand - 2026-07-17
+
+### Plan
+
+- [x] Select the product-aligned repository and service names `finrag-research` and `finrag-research-api`.
+- [x] Rename the standalone GitHub repository and update its description, homepage, and portfolio topics.
+- [x] Remove account-name branding from configuration, documentation, tests, task records, and public URLs.
+- [ ] Deploy and verify the branded Cloud Run services, then remove the temporary named services and images.
+- [ ] Run CI and confirm the repository, deployment, and local checkout are synchronized.
+
+### Implementation review
+
+- In progress.
+
+## Clean standalone repository separation - 2026-07-17
 
 ### Plan
 
 - [x] Confirm the production work currently exists only on a draft branch inside the contributors' repository.
-- [x] Create a clean root snapshot so the personal repository does not inherit shared contributor history.
-- [x] Create `ARJUNVARMA2000/Financial-RAG-Personal` and publish the snapshot as `main`.
+- [x] Create a clean root snapshot so the standalone repository does not inherit shared contributor history.
+- [x] Create `ARJUNVARMA2000/finrag-research` and publish the snapshot as `main`.
 - [x] Verify repository ownership, README links, CI, live deployment, and local/remote parity.
 - [x] Close the old draft PR and remove only `codex/production-rag-overhaul` from the contributors' repository.
 
 ### Implementation review
 
-- Created the private, sole-collaborator repository `ARJUNVARMA2000/Financial-RAG-Personal` with a parentless root snapshot, so the shared project's commit and contributor history were not inherited.
-- The personal repository's `main` contains the complete production workspace and links only to the `arjun-finrag-*` deployment; its independent GitHub Actions quality workflow passes.
-- Repointed this workspace's sole Git remote to the personal repository and made local `main` track `origin/main`.
+- Created the private, sole-collaborator repository `ARJUNVARMA2000/finrag-research` with a parentless root snapshot, so the shared project's commit and contributor history were not inherited.
+- The standalone repository's `main` contains the complete production workspace and links only to the portfolio deployment; its independent GitHub Actions quality workflow passes.
+- Repointed this workspace's sole Git remote to the standalone repository and made local `main` track `origin/main`.
 - Closed old PR #1, deleted only the old `codex/production-rag-overhaul` branch, and verified the contributors' `main` remains unchanged at `d04b1b1` with its original site link.
 
 ## Canonical deployment documentation - 2026-07-17
 
 ### Plan
 
-- [x] Verify the restored site and personal deployment traffic targets independently.
-- [x] Make the README present only the personal `arjun-finrag-*` deployment.
-- [x] Align setup and freshness documentation with the personal deployment endpoints.
+- [x] Verify the restored site and standalone deployment traffic targets independently.
+- [x] Make the README present only the portfolio deployment.
+- [x] Align setup and freshness documentation with the portfolio endpoints.
 - [x] Run tests, validate links, commit, push, and confirm local/remote parity.
 
 ### Implementation review
 
-- Confirmed the original URLs remain pinned to backend `finrag-backend-00007-kcp` and frontend `finrag-frontend-00006-snv`, while the personal URLs serve `arjun-finrag-*` revision 1 with 100% traffic.
-- The README now has a single `Personal production deployment` section containing only the new workspace, readiness, and coverage links; no previous deployment URL or migration history is present.
-- Setup and freshness docs use the same personal endpoints, and a regression test rejects previous canonical URLs from all user-facing Markdown files.
+- Confirmed the original URLs remain pinned to backend `finrag-backend-00007-kcp` and frontend `finrag-frontend-00006-snv`, while the standalone deployment serves separate revisions with 100% traffic.
+- The README contains only the portfolio workspace, readiness, and coverage links; no previous deployment URL or migration history is present.
+- Setup and freshness docs use the same portfolio endpoints, and a regression test rejects previous canonical URLs from all user-facing Markdown files.
 - Ruff lint/format, `git diff --check`, all 54 tests, and live HTTP checks for all three documented endpoints pass.
 
-## Isolated personal deployment correction - 2026-07-17
+## Isolated deployment correction - 2026-07-17
 
 ### Plan
 
 - [x] Confirm the intended repository contains the original contributor history and inspect cloud-project ownership.
-- [x] Retarget normal and refresh deployment defaults to unique `arjun-finrag-*` services and public URLs.
+- [x] Retarget normal and refresh deployment defaults to unique standalone services and public URLs.
 - [x] Restore the pre-existing `finrag-*` URLs to their pre-change revisions.
 - [x] Run the complete release gate, commit, push, and deploy the isolated services.
 - [x] Verify the new application URL, highlighted PDF viewer, logs, GitHub checks, and local/remote parity.
@@ -46,9 +60,9 @@
 ### Implementation review
 
 - The original site is restored to backend revision `finrag-backend-00007-kcp` and frontend revision `finrag-frontend-00006-snv`, each with 100% traffic.
-- Both Cloud Build configurations now default to isolated `arjun-finrag-*` service, image, and URL targets; a regression test prevents the old service names from returning as deploy targets.
+- Both Cloud Build configurations default to isolated service, image, and URL targets; a regression test prevents the old service names from returning as deploy targets.
 - Local Ruff lint, Ruff formatting, compilation, YAML parsing, `git diff --check`, and all 53 tests pass before deployment.
-- Cloud Build `ef649b8f-9262-4ed2-9bdd-9b47c0adcb89` succeeded and created backend revision `arjun-finrag-backend-00001-q7c` plus frontend revision `arjun-finrag-frontend-00001-9bd`, each Ready with 100% traffic and isolated build-tagged images.
+- Cloud Build `ef649b8f-9262-4ed2-9bdd-9b47c0adcb89` succeeded and created the first standalone backend and frontend revisions, each Ready with 100% traffic and isolated build-tagged images.
 - First-service public invoker bindings were applied explicitly after Cloud Run did not persist `--allow-unauthenticated`; automated smoke then passed with 4,967 indexed chunks and a 597,845-byte source PDF.
 - Browser QA on the isolated URL returned NVIDIA Q3 FY26 revenue of $57.0 billion, kept citation URLs on the isolated backend, rendered page 10 with non-zero canvases, visibly highlighted the cited passage, and found no fallback, overflow, or console entries.
 

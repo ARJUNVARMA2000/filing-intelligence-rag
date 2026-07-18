@@ -13,5 +13,6 @@
 - For an isolated release, use unique backend and frontend service names, verify the resulting URLs before changing traffic, and leave or restore pre-existing services to their prior revisions.
 - Record the repository identity, cloud project, service names, and public URLs as separate release facts; a GitHub fork and a Cloud Run deployment do not share identity automatically.
 - Keep the README canonical and forward-looking. When the user wants only the current deployment documented, keep old URLs and migration history out of user-facing docs and explain them only in the handoff.
-- Before associating a deployment with a GitHub project, verify the repository, default branch, release branch, and deployed build separately. A feature branch inside a shared repository is not a personal repository.
-- When the user requires ownership separation from contributors, create a clean-history personal repository first, verify it, and only then remove the release branch and pull request from the shared repository.
+- Before associating a deployment with a GitHub project, verify the repository, default branch, release branch, and deployed build separately. A feature branch inside a shared repository is not a standalone repository.
+- When the user requires ownership separation from contributors, create a clean-history standalone repository first, verify it, and only then remove the release branch and pull request from the shared repository.
+- Brand portfolio infrastructure as a product, never as a person's account name. Repository slugs, service names, image packages, URLs, documentation headings, and deployment defaults should all reinforce the public product identity.

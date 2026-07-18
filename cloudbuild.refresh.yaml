@@ -1,9 +1,9 @@
 substitutions:
   _REGION: us-central1
   _REPOSITORY: finrag-repo
-  _BACKEND_SERVICE: arjun-finrag-backend
-  _BACKEND_URL: https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app
-  _FRONTEND_URL: https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app
+  _BACKEND_SERVICE: finrag-research-api
+  _BACKEND_URL: https://finrag-research-api-7pj7nolpla-uc.a.run.app
+  _FRONTEND_URL: https://finrag-research-7pj7nolpla-uc.a.run.app
   _TICKERS: AAPL,ADS,AMZN,COST,IBM,JNJ,JPM,LOW,META,NFLX,NVDA,TGT,TSLA,V,WMT
   _LOOKBACK_DAYS: "730"
 
