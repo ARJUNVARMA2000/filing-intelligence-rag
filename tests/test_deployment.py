@@ -240,6 +240,12 @@ def test_document_viewer_uses_consistent_pdfjs_assets_and_safe_fallback() -> Non
     assert "linkService.goToPage(nextPage)" in html
     assert "position: absolute; inset: 0" in html
     assert "viewer," in html
+    assert "--paper: #f3f0e8" in html
+    assert "--cobalt: #2457d6" in html
+    assert "--vermilion: #d55235" in html
+    assert "<strong>Filing Intelligence</strong>" in html
+    assert "Research, with receipts." in html
+    assert 'class="document-name">NVIDIA &lt;results&gt;</p>' in html
     assert "NVIDIA &lt;results&gt;" in html
     assert "Document: context only" not in html
     assert "</script><script>alert" not in html

@@ -308,37 +308,38 @@ def view_document_chunk(
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
         <link rel="stylesheet" href="{cdn_base}/web/pdf_viewer.css" crossorigin="anonymous" />
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400..650&family=Public+Sans:wght@400;500;600;700&display=swap');
 
             :root {{
-                color-scheme: dark;
-                --ink: #0a0d0c;
-                --ink-soft: #111714;
-                --panel: #151c18;
-                --panel-raised: #1a231e;
-                --line: rgba(233, 239, 227, 0.12);
-                --line-strong: rgba(233, 239, 227, 0.22);
-                --paper: #f2eee3;
-                --paper-soft: #c7c8bf;
-                --muted: #8d948c;
-                --signal: #b8f36b;
-                --signal-soft: rgba(184, 243, 107, 0.12);
-                --amber: #dcb66d;
-                --danger: #ef8f80;
-                --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
-                --serif: 'Newsreader', Georgia, serif;
-                --mono: 'IBM Plex Mono', Consolas, monospace;
+                color-scheme: light;
+                --paper: #f3f0e8;
+                --paper-deep: #e9e4d8;
+                --sheet: #fbfaf6;
+                --ink: #152238;
+                --ink-soft: #334156;
+                --muted: #6e756f;
+                --line: #d4d0c6;
+                --line-strong: #b7b2a8;
+                --cobalt: #2457d6;
+                --cobalt-soft: #e7edfb;
+                --vermilion: #d55235;
+                --vermilion-soft: #f8e9e2;
+                --danger: #b8352b;
+                --sans: 'Public Sans', 'Avenir Next', sans-serif;
+                --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+                --shadow: 0 24px 80px rgba(34, 43, 57, 0.09);
             }}
 
             * {{ box-sizing: border-box; }}
             html, body {{ width: 100%; min-height: 100%; }}
             body {{
                 margin: 0;
-                color: var(--paper);
+                color: var(--ink);
                 background:
-                    radial-gradient(circle at 92% -20%, rgba(184, 243, 107, 0.09), transparent 28rem),
-                    var(--ink);
+                    linear-gradient(90deg, transparent 0, transparent calc(50% - .5px), rgba(21,34,56,.035) 50%, transparent calc(50% + .5px)),
+                    var(--paper);
                 font-family: var(--sans);
+                -webkit-font-smoothing: antialiased;
             }}
             body::before {{
                 position: fixed;
@@ -346,17 +347,16 @@ def view_document_chunk(
                 z-index: -1;
                 content: '';
                 pointer-events: none;
-                opacity: 0.28;
-                background-image:
-                    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-                background-size: 44px 44px;
+                opacity: 0.3;
+                background-image: radial-gradient(rgba(21,34,56,.065) .6px, transparent .6px);
+                background-size: 5px 5px;
+                mask-image: linear-gradient(to bottom, #000, transparent 78%);
             }}
             button, input, a {{ font: inherit; }}
             button, a {{ -webkit-tap-highlight-color: transparent; }}
             button:focus-visible, a:focus-visible, input:focus-visible {{
-                outline: 2px solid var(--signal);
-                outline-offset: 2px;
+                outline: 2px solid var(--cobalt);
+                outline-offset: 3px;
             }}
 
             .shell {{
@@ -372,33 +372,36 @@ def view_document_chunk(
                 align-items: center;
                 justify-content: space-between;
                 gap: 1rem;
-                min-height: 4.25rem;
-                padding: 0.75rem 1.15rem;
-                border-bottom: 1px solid var(--line);
-                background: rgba(10, 13, 12, 0.94);
-                backdrop-filter: blur(16px);
+                width: min(1480px, calc(100% - 64px));
+                min-height: 5.75rem;
+                margin: 0 auto;
+                padding: 0;
+                border-bottom: 1px solid var(--line-strong);
             }}
             .wordmark {{ display: flex; align-items: center; gap: 0.7rem; min-width: 0; }}
             .wordmark-mark {{
                 display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px;
                 flex: 0 0 auto;
-                place-items: center;
-                width: 2rem;
-                height: 2rem;
-                color: var(--ink);
-                background: var(--signal);
-                border-radius: 2px;
-                font-family: var(--mono);
-                font-size: 0.7rem;
-                font-weight: 500;
+                width: 2.375rem;
+                height: 2.375rem;
+                padding: 8px 7px 6px;
+                background: var(--ink);
             }}
+            .wordmark-mark i {{ align-self: end; background: var(--sheet); }}
+            .wordmark-mark i:nth-child(1) {{ height: 52%; }}
+            .wordmark-mark i:nth-child(2) {{ height: 100%; }}
+            .wordmark-mark i:nth-child(3) {{ height: 72%; background: var(--vermilion); }}
             .wordmark-copy {{ min-width: 0; }}
             .wordmark-copy strong {{
                 display: block;
                 overflow: hidden;
-                color: var(--paper);
-                font-size: 0.86rem;
-                font-weight: 500;
+                color: var(--ink);
+                font-family: var(--serif);
+                font-size: 1.1rem;
+                font-weight: 590;
+                letter-spacing: -0.025em;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }}
@@ -406,9 +409,9 @@ def view_document_chunk(
                 display: block;
                 margin-top: 0.12rem;
                 color: var(--muted);
-                font-family: var(--mono);
-                font-size: 0.58rem;
-                letter-spacing: 0.11em;
+                font-size: 0.56rem;
+                font-weight: 650;
+                letter-spacing: 0.13em;
                 text-transform: uppercase;
             }}
             .topbar-actions {{ display: flex; align-items: center; gap: 0.55rem; }}
@@ -418,44 +421,56 @@ def view_document_chunk(
                 justify-content: center;
                 min-height: 2.35rem;
                 padding: 0.45rem 0.8rem;
-                color: var(--paper);
+                color: var(--ink);
                 border: 1px solid var(--line-strong);
-                border-radius: 3px;
-                background: var(--panel);
+                border-radius: 99px;
+                background: rgba(251,250,246,.5);
                 font-size: 0.74rem;
                 font-weight: 500;
                 text-decoration: none;
-                transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+                transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
             }}
-            .button:hover {{ color: var(--signal); border-color: rgba(184,243,107,0.48); transform: translateY(-1px); }}
-            .button.primary {{ color: var(--ink); border-color: var(--signal); background: var(--signal); }}
-            .button.primary:hover {{ color: var(--ink); background: #c5fa82; }}
+            .button:hover {{ color: var(--cobalt); border-color: var(--cobalt); background: var(--sheet); transform: translateY(-1px); }}
+            .button.primary {{ color: white; border-color: var(--cobalt); background: var(--cobalt); }}
+            .button.primary:hover {{ color: white; background: #1d49ba; }}
 
             .workspace {{
                 display: grid;
-                grid-template-columns: minmax(17rem, 22rem) minmax(0, 1fr);
-                min-height: 0;
+                grid-template-columns: minmax(19rem, 23rem) minmax(0, 1fr);
+                width: min(1480px, calc(100% - 64px));
+                min-height: calc(100vh - 7.75rem);
+                min-height: calc(100dvh - 7.75rem);
+                margin: 2rem auto;
+                border: 1px solid var(--line-strong);
+                background: var(--sheet);
+                box-shadow: var(--shadow);
             }}
             .evidence {{
                 overflow: auto;
-                padding: 1.5rem;
+                padding: clamp(1.5rem, 3vw, 2.5rem);
                 border-right: 1px solid var(--line);
-                background: rgba(13, 18, 16, 0.88);
+                background: var(--paper);
             }}
             .eyebrow {{
-                color: var(--signal);
-                font-family: var(--mono);
-                font-size: 0.6rem;
-                letter-spacing: 0.14em;
+                display: flex;
+                align-items: center;
+                gap: 0.7rem;
+                color: var(--cobalt);
+                font-size: 0.62rem;
+                font-weight: 720;
+                letter-spacing: 0.17em;
                 text-transform: uppercase;
             }}
+            .eyebrow::before {{ width: 2.6rem; height: 2px; content: ''; background: var(--cobalt); }}
+            .document-name {{ margin: 1.5rem 0 0.5rem; color: var(--muted); font-size: 0.7rem; font-weight: 600; line-height: 1.5; }}
             .evidence h1 {{
-                margin: 0.75rem 0 1.35rem;
-                color: var(--paper);
+                margin: 0 0 1.75rem;
+                color: var(--ink);
                 font-family: var(--serif);
-                font-size: clamp(1.6rem, 2.2vw, 2.3rem);
-                font-weight: 500;
-                line-height: 1.02;
+                font-size: clamp(2rem, 2.5vw, 2.8rem);
+                font-weight: 470;
+                letter-spacing: -0.045em;
+                line-height: 0.98;
             }}
             .metadata {{
                 display: grid;
@@ -470,35 +485,34 @@ def view_document_chunk(
                 padding: 0.68rem 0;
                 border-bottom: 1px solid var(--line);
             }}
-            .metadata dt {{ color: var(--muted); font-family: var(--mono); font-size: 0.61rem; letter-spacing: 0.08em; text-transform: uppercase; }}
-            .metadata dd {{ margin: 0; color: var(--paper-soft); font-size: 0.75rem; text-align: right; overflow-wrap: anywhere; }}
-            .page-chip {{ color: var(--signal); font-family: var(--mono); }}
+            .metadata dt {{ color: var(--muted); font-size: 0.59rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }}
+            .metadata dd {{ margin: 0; color: var(--ink-soft); font-size: 0.75rem; font-weight: 600; text-align: right; overflow-wrap: anywhere; }}
+            .page-chip {{ color: var(--cobalt); }}
             .excerpt-label {{
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
                 margin-bottom: 0.7rem;
-                color: var(--amber);
-                font-family: var(--mono);
+                color: var(--vermilion);
                 font-size: 0.61rem;
+                font-weight: 720;
                 letter-spacing: 0.1em;
                 text-transform: uppercase;
             }}
-            .excerpt-label::before {{ width: 1.5rem; height: 1px; content: ''; background: var(--amber); }}
+            .excerpt-label::before {{ width: 1.5rem; height: 2px; content: ''; background: var(--vermilion); }}
             .excerpt {{
                 margin: 0;
                 padding: 1rem;
-                color: var(--paper-soft);
-                border: 1px solid rgba(220, 182, 109, 0.22);
-                border-left: 2px solid var(--amber);
-                border-radius: 2px;
-                background: rgba(220, 182, 109, 0.055);
+                color: var(--ink-soft);
+                border: 1px solid var(--line);
+                border-left: 3px solid var(--vermilion);
+                background: var(--sheet);
                 font-size: 0.76rem;
                 line-height: 1.62;
                 white-space: pre-wrap;
                 overflow-wrap: anywhere;
             }}
-            .excerpt mark {{ padding: 0.05rem 0.12rem; color: var(--ink); background: var(--amber); }}
+            .excerpt mark {{ padding: 0.05rem 0.12rem; color: var(--ink); background: var(--vermilion-soft); }}
             .evidence-note {{ margin: 0.85rem 0 0; color: var(--muted); font-size: 0.65rem; line-height: 1.5; }}
 
             .document-panel {{
@@ -506,7 +520,7 @@ def view_document_chunk(
                 grid-template-rows: auto minmax(0, 1fr);
                 min-width: 0;
                 min-height: 0;
-                background: #272c29;
+                background: var(--paper-deep);
             }}
             .document-stage {{ position: relative; min-height: 0; }}
             .viewer-toolbar {{
@@ -518,44 +532,44 @@ def view_document_chunk(
                 gap: 1rem;
                 min-height: 3.4rem;
                 padding: 0.62rem 0.9rem;
-                border-bottom: 1px solid rgba(0,0,0,0.42);
-                background: #111714;
+                border-bottom: 1px solid var(--line-strong);
+                background: rgba(251,250,246,.94);
+                backdrop-filter: blur(14px);
             }}
-            .viewer-status {{ display: flex; align-items: center; min-width: 0; gap: 0.55rem; color: var(--paper-soft); font-size: 0.7rem; }}
-            .status-dot {{ width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px rgba(220,182,109,0.08); }}
-            .status-dot.ready {{ background: var(--signal); box-shadow: 0 0 0 4px var(--signal-soft); }}
-            .status-dot.error {{ background: var(--danger); box-shadow: 0 0 0 4px rgba(239,143,128,0.08); }}
+            .viewer-status {{ display: flex; align-items: center; min-width: 0; gap: 0.55rem; color: var(--ink-soft); font-size: 0.7rem; font-weight: 600; }}
+            .status-dot {{ width: 0.42rem; height: 0.42rem; flex: 0 0 auto; border-radius: 50%; background: var(--vermilion); box-shadow: 0 0 0 4px var(--vermilion-soft); }}
+            .status-dot.ready {{ background: var(--cobalt); box-shadow: 0 0 0 4px var(--cobalt-soft); }}
+            .status-dot.error {{ background: var(--danger); box-shadow: 0 0 0 4px rgba(184,53,43,0.09); }}
             .controls {{ display: flex; align-items: center; gap: 0.35rem; }}
             .control-button, .page-input {{
                 height: 2rem;
-                color: var(--paper-soft);
+                color: var(--ink-soft);
                 border: 1px solid var(--line-strong);
-                border-radius: 2px;
-                background: var(--panel);
-                font-family: var(--mono);
+                border-radius: 99px;
+                background: var(--sheet);
                 font-size: 0.65rem;
             }}
             .control-button {{ min-width: 2rem; padding: 0 0.55rem; cursor: pointer; }}
-            .control-button:hover:not(:disabled) {{ color: var(--signal); border-color: rgba(184,243,107,0.45); }}
+            .control-button:hover:not(:disabled) {{ color: var(--cobalt); border-color: var(--cobalt); }}
             .control-button:disabled {{ cursor: wait; opacity: 0.38; }}
-            .page-control {{ display: flex; align-items: center; gap: 0.35rem; margin-right: 0.45rem; color: var(--muted); font-family: var(--mono); font-size: 0.62rem; }}
+            .page-control {{ display: flex; align-items: center; gap: 0.35rem; margin-right: 0.45rem; color: var(--muted); font-size: 0.62rem; font-weight: 650; }}
             .page-input {{ width: 2.8rem; padding: 0 0.35rem; text-align: center; }}
-            .zoom-value {{ min-width: 3.2rem; color: var(--muted); font-family: var(--mono); font-size: 0.62rem; text-align: center; }}
-            #viewerContainer {{ position: absolute; inset: 0; overflow: auto; background: #343a36; }}
+            .zoom-value {{ min-width: 3.2rem; color: var(--muted); font-size: 0.62rem; text-align: center; }}
+            #viewerContainer {{ position: absolute; inset: 0; overflow: auto; background: #d9d6cf; }}
             #viewer {{ padding: 1.25rem 0 2.5rem; }}
-            .pdfViewer .page {{ margin: 0 auto 1.25rem; border: 0; box-shadow: 0 10px 34px rgba(0,0,0,0.28); }}
-            .pdfViewer .textLayer .highlight {{ background: rgba(184, 243, 107, 0.62); border-radius: 2px; box-shadow: 0 0 0 1px rgba(85,118,42,0.35); }}
-            .pdfViewer .textLayer .highlight.selected {{ background: rgba(220, 182, 109, 0.82); }}
+            .pdfViewer .page {{ margin: 0 auto 1.25rem; border: 1px solid rgba(21,34,56,.1); box-shadow: 0 14px 38px rgba(21,34,56,.16); }}
+            .pdfViewer .textLayer .highlight {{ background: rgba(213, 82, 53, 0.34); border-radius: 2px; box-shadow: 0 0 0 1px rgba(213,82,53,0.36); }}
+            .pdfViewer .textLayer .highlight.selected {{ background: rgba(36, 87, 214, 0.3); }}
             .loading-state {{
                 position: absolute;
                 inset: 0;
                 z-index: 5;
                 display: grid;
                 place-items: center;
-                color: var(--paper-soft);
-                background: #343a36;
-                font-family: var(--mono);
+                color: var(--ink-soft);
+                background: var(--paper-deep);
                 font-size: 0.7rem;
+                font-weight: 650;
                 letter-spacing: 0.06em;
             }}
             .loading-state::before {{
@@ -564,28 +578,29 @@ def view_document_chunk(
                 height: 2rem;
                 margin-top: -3.6rem;
                 content: '';
-                border: 2px solid rgba(184,243,107,0.16);
-                border-top-color: var(--signal);
+                border: 2px solid rgba(36,87,214,0.14);
+                border-top-color: var(--cobalt);
                 border-radius: 50%;
                 animation: spin 850ms linear infinite;
             }}
-            .native-fallback {{ display: none; grid-template-rows: auto minmax(0, 1fr); min-height: 0; background: #343a36; }}
+            .native-fallback {{ display: none; grid-template-rows: auto minmax(0, 1fr); min-height: 0; background: var(--paper-deep); }}
             .native-message {{
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
                 gap: 1rem;
                 padding: 0.7rem 0.9rem;
-                color: var(--paper-soft);
-                border-bottom: 1px solid rgba(0,0,0,0.35);
-                background: rgba(239,143,128,0.07);
+                color: var(--ink-soft);
+                border-bottom: 1px solid var(--line-strong);
+                background: var(--vermilion-soft);
                 font-size: 0.7rem;
             }}
-            .native-message a {{ color: var(--signal); }}
+            .native-message a {{ color: var(--cobalt); }}
             .native-fallback iframe {{ width: 100%; height: 100%; min-height: 32rem; border: 0; background: white; }}
             @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
 
             @media (max-width: 860px) {{
+                .topbar, .workspace {{ width: min(100% - 32px, 1480px); }}
                 .shell {{ display: block; }}
                 .workspace {{ display: block; }}
                 .evidence {{ overflow: visible; border-right: 0; border-bottom: 1px solid var(--line); }}
@@ -595,7 +610,8 @@ def view_document_chunk(
                 .topbar {{ align-items: flex-start; }}
                 .topbar-actions {{ flex-direction: column; align-items: stretch; }}
                 .button {{ min-height: 2rem; padding: 0.35rem 0.6rem; font-size: 0.66rem; }}
-                .evidence {{ padding: 1.15rem; }}
+                .workspace {{ margin-top: 1rem; }}
+                .evidence {{ padding: 1.5rem 1.15rem; }}
                 .viewer-toolbar {{ align-items: flex-start; flex-direction: column; }}
                 .controls {{ width: 100%; justify-content: flex-end; }}
                 .control-button.fit-button, .zoom-value {{ display: none; }}
@@ -609,10 +625,10 @@ def view_document_chunk(
         <main class="shell">
             <header class="topbar">
                 <div class="wordmark">
-                    <span class="wordmark-mark">S{page_label}</span>
+                    <span class="wordmark-mark" aria-hidden="true"><i></i><i></i><i></i></span>
                     <div class="wordmark-copy">
-                        <strong>{doc_title}</strong>
-                        <span>Source evidence viewer</span>
+                        <strong>Filing Intelligence</strong>
+                        <span>Research, with receipts.</span>
                     </div>
                 </div>
                 <nav class="topbar-actions" aria-label="Document actions">
@@ -623,7 +639,8 @@ def view_document_chunk(
 
             <div class="workspace">
                 <aside class="evidence" aria-label="Citation context">
-                    <div class="eyebrow">Cited passage</div>
+                    <div class="eyebrow">Source / S{page_label}</div>
+                    <p class="document-name">{doc_title}</p>
                     <h1>Verify the answer against the source.</h1>
                     <dl class="metadata">
                         <div class="metadata-row"><dt>Ticker</dt><dd>{ticker}</dd></div>
