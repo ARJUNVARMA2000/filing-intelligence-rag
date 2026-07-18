@@ -18,7 +18,7 @@
 ### Implementation review
 
 - Replaced both product captures with the current editorial Next.js workspace at desktop and a 390 px mobile viewport, running against the 4,967-passage, 128-document, 15-company packaged index.
-- Updated the README with the production architecture, current service links, BFF security boundary, PDF viewer behavior, local commands, deployment smoke contract, and verified 64-Python / 7-frontend test baseline.
+- Updated the README with the production architecture, current service links, BFF security boundary, PDF viewer behavior, local commands, deployment smoke contract, and verified 64-Python / 8-frontend test baseline.
 - Verified the images visually, confirmed mobile has no horizontal overflow or browser diagnostics, and removed historical frontend/deployment wording from the README.
 
 ## Production web rewrite - 2026-07-18
@@ -51,9 +51,10 @@
 - Preserved auto-scope parsing, explicit ticker/period filters, evidence depth, bounded history, Markdown answers, citations, excerpts, relevance labels, and cited-page navigation. User-entered scope wins over inferred scope.
 - Added stable citation `source_id` values so answer markers retain their original evidence identities, and fixed uppercase company aliases such as `NVIDIA` being duplicated as raw ticker tokens.
 - Reworked the Node standalone build, non-root container, local launcher, Railway process, Cloud Build, GitHub quality workflow, dependencies, setup documentation, and architecture record. Removed Streamlit dependencies and obsolete green product screenshots.
-- Verification passed: ESLint, strict TypeScript, 7 Vitest checks, Next.js production build, zero production npm audit findings, Ruff lint/format, 64 Pytest checks, Python compilation, and `git diff --check`.
+- Verification passed: ESLint, strict TypeScript, 8 Vitest checks, Next.js production build, zero production npm audit findings, Ruff lint/format, 64 Pytest checks, Python compilation, and `git diff --check`.
 - Hardened the highlighted-source flow with validated source redirects, real local/GCS single-byte-range delivery, robust PDF.js search candidates, state-driven no-match fallback, clamped cited-page navigation, and sanitized citation excerpts.
 - Fixed the production health BFF so each timed response body is consumed before slower parallel health work can expire its abort signal; added a regression test for that exact ordering.
+- Updated source redirect validation to accept decoded corpus paths containing spaces while retaining the document-only and traversal guards; added a realistic NVIDIA citation path test.
 - Browser QA passed against the standalone production server with live local corpus metadata: 4,967 passages, 128 documents, 15 companies, no console warnings/errors, and zero horizontal overflow at the default desktop viewport and 390×844 mobile viewport. The local Docker engine was unavailable, so container execution remains covered by the build definition and Cloud Build gate rather than a local image run.
 
 ## Filing Intelligence RAG rename - 2026-07-17

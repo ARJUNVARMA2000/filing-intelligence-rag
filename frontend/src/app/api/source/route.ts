@@ -1,6 +1,6 @@
 import { backendUrl } from "../_lib/backend";
 
-const DOCUMENT_PATH = /^\/documents\/[A-Za-z0-9%._~!$&'()*+,;=:@/-]+$/;
+const DOCUMENT_PATH = /^\/documents\/[A-Za-z0-9% ._~!$&'()*+,;=:@/-]+$/;
 
 export function GET(request: Request): Response {
   const path = new URL(request.url).searchParams.get("path") ?? "";

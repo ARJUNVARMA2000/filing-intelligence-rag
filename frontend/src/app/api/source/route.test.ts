@@ -15,6 +15,24 @@ describe("source redirect", () => {
     );
   });
 
+  it("accepts decoded corpus paths containing spaces", () => {
+    const sourcePath =
+      "/documents/NVDA_Q3-2026_NVIDIA - Q3 2026 - Conference Call Deck/" +
+      "chunks/NVDA_Q3-2026_NVIDIA - Q3 2026 - Conference Call Deck_chunk_5/viewer";
+    const response = GET(
+      new Request(`http://localhost/api/source?path=${encodeURIComponent(sourcePath)}`),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://127.0.0.1:8000/documents/" +
+        "NVDA_Q3-2026_NVIDIA%20-%20Q3%202026%20-%20Conference%20Call%20Deck/" +
+        "chunks/" +
+        "NVDA_Q3-2026_NVIDIA%20-%20Q3%202026%20-%20Conference%20Call%20Deck_chunk_5/" +
+        "viewer",
+    );
+  });
+
   it("rejects traversal and non-document destinations", () => {
     const traversal = GET(
       new Request("http://localhost/api/source?path=%2Fdocuments%2F..%2Fsecrets"),
