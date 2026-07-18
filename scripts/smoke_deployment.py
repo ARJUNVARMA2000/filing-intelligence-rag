@@ -27,7 +27,7 @@ def fetch(url: str, *, headers: dict[str, str] | None = None) -> tuple[int, str,
         return (
             response.status,
             response.headers.get_content_type(),
-            dict(response.headers.items()),
+            {key.lower(): value for key, value in response.headers.items()},
             response.read(),
         )
 
@@ -79,8 +79,8 @@ def main() -> None:
     )
     assert status == 206 and content_type == "application/pdf" and body.startswith(b"%PDF")
     assert len(body) == 128
-    assert headers.get("Accept-Ranges") == "bytes"
-    assert headers.get("Content-Range", "").startswith("bytes 0-127/")
+    assert headers.get("accept-ranges") == "bytes"
+    assert headers.get("content-range", "").startswith("bytes 0-127/")
 
     print(
         json.dumps(

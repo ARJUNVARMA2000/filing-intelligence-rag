@@ -2,10 +2,15 @@ import { backendFetch } from "../_lib/backend";
 
 export const runtime = "nodejs";
 
+async function fetchJson(path: string, timeoutMs: number): Promise<unknown> {
+  const response = await backendFetch(path, {}, timeoutMs);
+  return response.json();
+}
+
 export async function GET(): Promise<Response> {
   const [readyResult, dataResult] = await Promise.allSettled([
-    backendFetch("/health/ready", {}, 3_500),
-    backendFetch("/health/data", {}, 6_000),
+    fetchJson("/health/ready", 3_500),
+    fetchJson("/health/data", 6_000),
   ]);
 
   let ready = false;
@@ -13,11 +18,11 @@ export async function GET(): Promise<Response> {
   let data = null;
 
   if (readyResult.status === "fulfilled") {
-    const payload = (await readyResult.value.json()) as { status?: string; index_chunks?: number };
+    const payload = readyResult.value as { status?: string; index_chunks?: number };
     ready = payload.status === "ready" && Number(payload.index_chunks) > 0;
     indexChunks = Number(payload.index_chunks) || 0;
   }
-  if (dataResult.status === "fulfilled") data = await dataResult.value.json();
+  if (dataResult.status === "fulfilled") data = dataResult.value;
 
   return Response.json(
     { ready, indexChunks, data },
