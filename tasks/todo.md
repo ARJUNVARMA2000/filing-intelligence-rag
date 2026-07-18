@@ -17,9 +17,9 @@
 
 ### Implementation review
 
-- Replaced both product captures with the current editorial Next.js workspace at desktop and 390 x 844 mobile sizes; both show the live 4,967-passage, 128-document, 15-company coverage state.
-- Updated the README to the production architecture, current service links, BFF security boundary, PDF viewer behavior, local commands, deployment smoke command, and the verified 64-Python / 6-frontend test baseline.
-- Verified the images visually, confirmed mobile has no horizontal overflow, and removed all historical frontend/deployment wording from the README.
+- Replaced both product captures with the current editorial Next.js workspace at desktop and a 390 px mobile viewport, running against the 4,967-passage, 128-document, 15-company packaged index.
+- Updated the README with the production architecture, current service links, BFF security boundary, PDF viewer behavior, local commands, deployment smoke contract, and verified 64-Python / 6-frontend test baseline.
+- Verified the images visually, confirmed mobile has no horizontal overflow or browser diagnostics, and removed historical frontend/deployment wording from the README.
 
 ## Production web rewrite - 2026-07-18
 

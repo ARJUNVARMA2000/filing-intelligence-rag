@@ -154,10 +154,13 @@ python -m compileall -q backend scripts tests
 npm --prefix frontend run lint
 npm --prefix frontend run typecheck
 npm --prefix frontend run test
+npm --prefix frontend audit --omit=dev
 npm --prefix frontend run build
 ```
 
-The current verification baseline is 64 Python checks and 6 frontend checks. The Python suite covers API contracts, auth boundaries, provider failures, query parsing, chunk provenance, retrieval/ranking, citation selection, index compatibility, local index restoration, PDF byte ranges, cited-page navigation, document paths, and data freshness. The frontend gates cover the same-origin BFF contract, validated source redirects, scope resolution, answer/evidence state, citation identity, linting, type safety, and the standalone production build.
+The current verification baseline is 64 Python checks and 6 frontend checks. The Python suite covers API contracts, auth boundaries, provider failures, query parsing, chunk provenance, retrieval/ranking, citation selection, index compatibility, local index restoration, PDF byte ranges, cited-page navigation, document paths, and data freshness. The frontend gates cover the same-origin BFF contract, validated source redirects, scope resolution, answer/evidence state, citation identity, linting, type safety, the production dependency audit, and the standalone build.
+
+Run the end-to-end smoke gate against the deployed service pair. It validates the same-origin JSON health response, backend authentication boundary, and a real PDF byte range.
 
 ```powershell
 python scripts/smoke_deployment.py `

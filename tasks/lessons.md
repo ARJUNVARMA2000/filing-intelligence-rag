@@ -23,3 +23,6 @@
 - Treat an instruction to preserve a shared repository as a hard write boundary: inventory it only with read-only commands, deploy new isolated resources first, and verify shared repository refs, service revisions, and traffic remain unchanged afterward.
 - A cosmetic product rename should not cascade into IAM identities, data buckets, environment-variable contracts, or shared registries; retain compatibility infrastructure unless the user explicitly authorizes a migration.
 - When the user changes a release name during an active build, cancel the build immediately, verify that no live service was created, amend the unpublished/private release commit, and restart deployment only after the final name is reflected everywhere.
+## Cloud release reproducibility
+
+- For Node container releases, run `npm ci` from the committed lockfile before pushing. A populated local `node_modules` tree can hide lockfile drift that Linux/npm in Cloud Build rejects.
