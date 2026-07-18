@@ -44,12 +44,12 @@ State is stored in `data/processed/quartr_sync_state.json`. Keep that file and `
 
 The build restores the prior watermark/raw corpus from Cloud Storage, synchronizes Quartr, rebuilds a clean Chroma artifact, uploads the source documents and state, and deploys a new immutable backend revision. This avoids mutating Cloud Run's ephemeral filesystem.
 
-The checked-in defaults target the portfolio `finrag-research-api` deployment. Review every substitution before starting a refresh because the selected backend service and document bucket are mutated by the build.
+The checked-in defaults target the portfolio `filing-intelligence-rag-api` deployment. Review every substitution before starting a refresh because the selected backend service and document bucket are mutated by the build.
 
 ## Monitoring
 
-- [`GET /health/ready`](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/ready) is the inexpensive platform readiness check for index availability.
-- [`GET /health/data`](https://finrag-research-api-7pj7nolpla-uc.a.run.app/health/data) returns source coverage, latest provider update, fetch age, and ticker/period coverage.
+- [`GET /health/ready`](https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app/health/ready) is the inexpensive platform readiness check for index availability.
+- [`GET /health/data`](https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app/health/data) returns source coverage, latest provider update, fetch age, and ticker/period coverage.
 - `DATA_MAX_AGE_HOURS` controls when the corpus is labeled stale (default: 168 hours).
 
 The endpoint reports `unknown` for the legacy bundled snapshot because it predates fetch/provenance metadata. After the first supported sync and rebuild it reports `fresh` or `stale` from indexed `fetched_at` values.

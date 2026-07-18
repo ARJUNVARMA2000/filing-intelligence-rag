@@ -188,13 +188,13 @@ def test_cloudbuild_defaults_target_the_portfolio_services() -> None:
     standard = (project_root / "cloudbuild.yaml").read_text(encoding="utf-8")
     refresh = (project_root / "cloudbuild.refresh.yaml").read_text(encoding="utf-8")
 
-    assert "_BACKEND_SERVICE: finrag-research-api" in standard
-    assert "_FRONTEND_SERVICE: finrag-research" in standard
-    assert "_BACKEND_SERVICE: finrag-research-api" in refresh
-    assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in standard
-    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in standard
-    assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in refresh
-    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in refresh
+    assert "_BACKEND_SERVICE: filing-intelligence-rag-api" in standard
+    assert "_FRONTEND_SERVICE: filing-intelligence-rag" in standard
+    assert "_BACKEND_SERVICE: filing-intelligence-rag-api" in refresh
+    assert "https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app" in standard
+    assert "https://filing-intelligence-rag-7pj7nolpla-uc.a.run.app" in standard
+    assert "https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app" in refresh
+    assert "https://filing-intelligence-rag-7pj7nolpla-uc.a.run.app" in refresh
     assert "\n      - finrag-backend\n" not in standard
     assert "\n      - finrag-frontend\n" not in standard
     assert "\n      - finrag-backend\n" not in refresh
@@ -214,7 +214,12 @@ def test_user_facing_docs_publish_only_the_portfolio_deployment() -> None:
     for content in docs.values():
         assert "https://finrag-backend-7pj7nolpla-uc.a.run.app" not in content
         assert "https://finrag-frontend-7pj7nolpla-uc.a.run.app" not in content
+        assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" not in content
+        assert "https://finrag-research-7pj7nolpla-uc.a.run.app" not in content
+        assert "https://sourcebound-finance-api-7pj7nolpla-uc.a.run.app" not in content
+        assert "https://sourcebound-finance-7pj7nolpla-uc.a.run.app" not in content
 
-    assert "https://finrag-research-7pj7nolpla-uc.a.run.app" in docs["README.md"]
+    assert docs["README.md"].startswith("# Filing Intelligence RAG\n")
+    assert "https://filing-intelligence-rag-7pj7nolpla-uc.a.run.app" in docs["README.md"]
     for content in docs.values():
-        assert "https://finrag-research-api-7pj7nolpla-uc.a.run.app" in content
+        assert "https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app" in content

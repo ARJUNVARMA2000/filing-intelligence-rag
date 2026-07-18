@@ -1100,9 +1100,9 @@ def render_sidebar(service_ready: bool) -> int:
         st.markdown(
             """
             <div class="side-brand">
-                <div class="brand-mark">FR</div>
+                <div class="brand-mark">FI</div>
                 <div>
-                    <div class="brand-name">FinRAG Research</div>
+                    <div class="brand-name">Filing Intelligence RAG</div>
                     <div class="brand-edition">Analyst workspace / 01</div>
                 </div>
             </div>
@@ -1166,8 +1166,8 @@ def render_masthead(service_ready: bool) -> None:
         f"""
         <header class="app-masthead">
             <div class="masthead-wordmark">
-                <span class="masthead-mark">FR /</span>
-                <span class="masthead-name">Financial Research</span>
+                <span class="masthead-mark">FI /</span>
+                <span class="masthead-name">Filing Intelligence RAG</span>
             </div>
             <div class="masthead-meta">
                 <span>Evidence-grounded intelligence</span>
@@ -1187,7 +1187,7 @@ def render_empty_state(top_k: int) -> None:
                 <div class="eyebrow">Source-grounded financial analysis</div>
                 <h1 class="hero-title">Ask the filing.<br><em>Get the evidence.</em></h1>
                 <p class="hero-subtitle">
-                    Move from a financial question to a defensible answer in seconds. FinRAG reads across
+                    Move from a financial question to a defensible answer in seconds. Filing Intelligence RAG reads across
                     filings and earnings materials, then keeps every conclusion tied to its source.
                 </p>
             </div>
@@ -1369,7 +1369,7 @@ def render_message(message: dict) -> None:
             )
         else:
             st.markdown(
-                '<div class="message-kicker assistant">FinRAG analysis</div>',
+                '<div class="message-kicker assistant">Filing Intelligence RAG analysis</div>',
                 unsafe_allow_html=True,
             )
             render_context_chips(message)
@@ -1471,7 +1471,7 @@ def handle_question(question: str, top_k: int) -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="FinRAG Research",
+        page_title="Filing Intelligence RAG",
         page_icon="📈",
         layout="wide",
         initial_sidebar_state="auto",

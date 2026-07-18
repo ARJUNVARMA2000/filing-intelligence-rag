@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routes import chat, documents, health
 
 app = FastAPI(
-    title="Financial Research API",
+    title="Filing Intelligence RAG API",
     description="Source-grounded financial research answers and document evidence.",
     version="1.0.0",
 )
@@ -31,7 +31,7 @@ app.add_middleware(
 
 @app.get("/")
 def root() -> dict:
-    return {"name": "Financial Research API", "version": app.version}
+    return {"name": "Filing Intelligence RAG API", "version": app.version}
 
 
 app.include_router(health.router, prefix="/health", tags=["health"])

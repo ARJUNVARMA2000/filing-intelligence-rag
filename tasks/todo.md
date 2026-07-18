@@ -1,4 +1,22 @@
-# Production-Grade Financial RAG Overhaul
+# Filing Intelligence RAG
+
+## Filing Intelligence RAG rename - 2026-07-17
+
+### Plan
+
+- [x] Inventory repository, documentation, product branding, Cloud Run services, images, and shared-resource boundaries.
+- [x] Rename only the standalone GitHub repository and retarget this checkout's origin and push safeguard.
+- [x] Replace active portfolio branding and deployment targets with `Filing Intelligence RAG`, `filing-intelligence-rag`, and `filing-intelligence-rag-api` while preserving compatibility identifiers and application behavior.
+- [ ] Run the complete local release gate, commit, push, deploy isolated services, and verify CI and live behavior.
+- [ ] Remove only superseded standalone `finrag-research*` services/images after the Filing Intelligence RAG deployment passes; verify the shared repository and services remain untouched.
+
+### Acceptance criteria
+
+- The standalone repository is `ARJUNVARMA2000/filing-intelligence-rag`, remains private and parentless, and is the only remote for this checkout.
+- The live portfolio application and API use Filing Intelligence RAG service names and URLs, with the same application behavior and data sources as the preceding standalone release.
+- Shared `Financial-RAG`, `finrag-frontend`, and `finrag-backend` resources receive no writes or configuration changes.
+- Documentation contains only the current Filing Intelligence RAG deployment links and regenerated Filing Intelligence RAG screenshots.
+- Local checks, GitHub Actions, Cloud Build, live smoke tests, PDF citation rendering, and local/remote commit parity all pass.
 
 ## Portfolio product rebrand - 2026-07-17
 

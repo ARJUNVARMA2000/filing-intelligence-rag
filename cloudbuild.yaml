@@ -1,10 +1,10 @@
 substitutions:
   _REGION: us-central1
   _REPOSITORY: finrag-repo
-  _BACKEND_SERVICE: finrag-research-api
-  _FRONTEND_SERVICE: finrag-research
-  _BACKEND_URL: https://finrag-research-api-7pj7nolpla-uc.a.run.app
-  _FRONTEND_URL: https://finrag-research-7pj7nolpla-uc.a.run.app
+  _BACKEND_SERVICE: filing-intelligence-rag-api
+  _FRONTEND_SERVICE: filing-intelligence-rag
+  _BACKEND_URL: https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app
+  _FRONTEND_URL: https://filing-intelligence-rag-7pj7nolpla-uc.a.run.app
 
 steps:
   - id: test

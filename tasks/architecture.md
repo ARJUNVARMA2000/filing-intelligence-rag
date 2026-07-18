@@ -1,4 +1,4 @@
-# Financial RAG production architecture
+# Filing Intelligence RAG production architecture
 
 ## Objective
 
