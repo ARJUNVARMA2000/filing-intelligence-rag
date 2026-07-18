@@ -1,5 +1,11 @@
 # Lessons
 
+## Public portfolio releases
+
+- Treat repository visibility, fork ancestry, default branch, live deployment, portfolio listing, and profile README as separate release checks. Verify every surface after publication instead of assuming one update propagates to the others.
+- A cited-source viewer is part of the product, not an auxiliary debug page. Reuse the application's typography, palette, spacing, identity, and responsive behavior while preserving PDF rendering and provenance controls.
+- When consolidating on `main`, verify local refs, remote refs, upstream SHAs, CI results, and deployment results independently; an empty pull-request list alone does not prove branch cleanup or release parity.
+
 ## Product documentation during UI rewrites
 
 - When replacing a documented frontend, regenerate the product screenshots in the same change instead of removing the preview. Treat current desktop and mobile captures as part of the release artifact and verify them against the production build before handoff.

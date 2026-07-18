@@ -1,5 +1,23 @@
 # Filing Intelligence RAG
 
+## Public portfolio release and cited-source UI alignment - 2026-07-18
+
+### Plan
+
+- [x] Publish the independent `filing-intelligence-rag` repository without reconnecting it to the shared contributors' repository.
+- [x] Align the cited-page PDF viewer with the main product's editorial design system while preserving PDF.js rendering, citation highlighting, byte-range delivery, navigation, and fallback behavior.
+- [x] Update the project README, portfolio case study, and GitHub profile with the current product name, links, and Next.js stack.
+- [x] Consolidate the project, portfolio, and profile repositories on `main`, remove superseded branches, and verify local/upstream commit parity.
+- [x] Run local quality gates, GitHub Actions, Cloud Run smoke checks, responsive browser QA, and portfolio production smoke tests.
+
+### Implementation review
+
+- Made `ARJUNVARMA2000/filing-intelligence-rag` public as a parentless repository whose only local and remote branch is `main`; the shared `Financial-RAG` repository was not modified.
+- Rebuilt the cited-source surface around the same Newsreader/Public Sans typography, warm-paper palette, ink, cobalt, vermilion, three-bar wordmark, cards, and responsive layout as the main application.
+- Preserved real PDF.js page rendering, exact citation highlighting, byte-range requests, cited-page navigation, zoom, source context, and the native-PDF fallback.
+- Published the updated portfolio case study and GitHub profile links. The portfolio quality and production-smoke workflows passed against the exact merged `main` revision.
+- Verified the public repository metadata, current README and portfolio content, production service revisions, live highlighted citation viewer, and exact local/upstream SHAs.
+
 ## README and product screenshot refresh - 2026-07-18
 
 ### Plan
@@ -69,7 +87,7 @@
 
 ### Acceptance criteria
 
-- The standalone repository is `ARJUNVARMA2000/filing-intelligence-rag`, remains private and parentless, and is the only remote for this checkout.
+- The standalone repository is `ARJUNVARMA2000/filing-intelligence-rag`, is public and parentless, and is the only remote for this checkout.
 - The live portfolio application and API use Filing Intelligence RAG service names and URLs, with the same application behavior and data sources as the preceding standalone release.
 - Shared `Financial-RAG`, `finrag-frontend`, and `finrag-backend` resources receive no writes or configuration changes.
 - Documentation contains only the current Filing Intelligence RAG deployment links and regenerated Filing Intelligence RAG screenshots.
