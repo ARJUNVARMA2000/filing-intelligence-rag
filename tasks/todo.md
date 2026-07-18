@@ -7,12 +7,16 @@
 - [x] Select the product-aligned repository and service names `finrag-research` and `finrag-research-api`.
 - [x] Rename the standalone GitHub repository and update its description, homepage, and portfolio topics.
 - [x] Remove account-name branding from configuration, documentation, tests, task records, and public URLs.
-- [ ] Deploy and verify the branded Cloud Run services, then remove the temporary named services and images.
-- [ ] Run CI and confirm the repository, deployment, and local checkout are synchronized.
+- [x] Deploy and verify the branded Cloud Run services, then remove the temporary named services and images.
+- [x] Run CI and confirm the repository, deployment, and local checkout are synchronized.
 
 ### Implementation review
 
-- In progress.
+- Renamed the sole-owner repository to `finrag-research`, set a portfolio description and homepage, and added focused financial-analysis, RAG, FastAPI, Streamlit, and Vertex AI topics.
+- Removed account-name branding from tracked configuration, documentation, tests, and task records; the product identity is consistently `FinRAG Research`, with `finrag-research` and `finrag-research-api` deployment targets.
+- Cloud Build `f584ec84-a8b0-4c26-bf93-22e0eb5aa5a0` succeeded and deployed revisions `finrag-research-00001-j7s` and `finrag-research-api-00001-6cc`, each Ready with 100% traffic and branded image packages.
+- Granted the frontend runtime identity `roles/run.invoker` on the portfolio API. Browser QA then returned NVIDIA Q3 FY26 revenue of $57.0 billion and highlighted the cited passage on PDF page 10 with no fallback, overflow, or console entries.
+- Verified the temporary account-named Cloud Run services and Artifact Registry packages are absent. Shared services, generic runtime identities, the repository, and the document bucket were left untouched.
 
 ## Clean standalone repository separation - 2026-07-17
 
@@ -20,13 +24,13 @@
 
 - [x] Confirm the production work currently exists only on a draft branch inside the contributors' repository.
 - [x] Create a clean root snapshot so the standalone repository does not inherit shared contributor history.
-- [x] Create `ARJUNVARMA2000/finrag-research` and publish the snapshot as `main`.
+- [x] Create `finrag-research` and publish the snapshot as `main`.
 - [x] Verify repository ownership, README links, CI, live deployment, and local/remote parity.
 - [x] Close the old draft PR and remove only `codex/production-rag-overhaul` from the contributors' repository.
 
 ### Implementation review
 
-- Created the private, sole-collaborator repository `ARJUNVARMA2000/finrag-research` with a parentless root snapshot, so the shared project's commit and contributor history were not inherited.
+- Created the private, sole-collaborator repository `finrag-research` with a parentless root snapshot, so the shared project's commit and contributor history were not inherited.
 - The standalone repository's `main` contains the complete production workspace and links only to the portfolio deployment; its independent GitHub Actions quality workflow passes.
 - Repointed this workspace's sole Git remote to the standalone repository and made local `main` track `origin/main`.
 - Closed old PR #1, deleted only the old `codex/production-rag-overhaul` branch, and verified the contributors' `main` remains unchanged at `d04b1b1` with its original site link.
