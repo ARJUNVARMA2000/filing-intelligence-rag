@@ -1,5 +1,4 @@
 -r requirements-backend.txt
--r requirements-frontend.txt
 
 # Evaluation and reporting utilities used by scripts/run_eval.py.
 pandas>=2.2,<3

@@ -1,17 +1,18 @@
 """
-Convenience launcher to run backend (FastAPI) and frontend (Streamlit) together.
+Convenience launcher to run backend (FastAPI) and frontend (Next.js) together.
 
 Usage:
     python scripts/run_local.py
 
 This script:
 1) Loads .env so API keys are available.
-2) Starts uvicorn on port 8000 and Streamlit on 8501.
+2) Starts uvicorn on port 8000 and Next.js on port 3000.
 3) Gracefully stops both on Ctrl+C.
 """
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -64,15 +65,8 @@ def main() -> None:
         "8000",
     ]
 
-    frontend_cmd = [
-        sys.executable,
-        "-m",
-        "streamlit",
-        "run",
-        "frontend/streamlit_app.py",
-        "--server.port",
-        "8501",
-    ]
+    npm_executable = "npm.cmd" if os.name == "nt" else "npm"
+    frontend_cmd = [npm_executable, "--prefix", "frontend", "run", "dev"]
 
     print("Starting backend:", " ".join(backend_cmd))
     backend = subprocess.Popen(backend_cmd, cwd=PROJECT_ROOT)

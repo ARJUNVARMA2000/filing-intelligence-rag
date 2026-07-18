@@ -10,9 +10,12 @@
         }
       },
       "filing-intelligence-rag": {
-        "build": { "builder": "NIXPACKS" },
+        "build": {
+          "builder": "NIXPACKS",
+          "buildCommand": "npm --prefix frontend ci && npm --prefix frontend run build"
+        },
         "deploy": {
-          "startCommand": "streamlit run frontend/streamlit_app.py --server.port $PORT --server.address 0.0.0.0",
+          "startCommand": "npm --prefix frontend start",
           "restartPolicyType": "ON_FAILURE",
           "restartPolicyMaxRetries": 10
         }

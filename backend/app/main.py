@@ -13,9 +13,9 @@ app = FastAPI(
 
 # Configure CORS - allow frontend URL from environment or default to localhost
 # Railway will set FRONTEND_URL environment variable
-frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:8501")
+frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 allowed_origins = list(
-    dict.fromkeys([frontend_url, "http://localhost:8501", "http://127.0.0.1:8501"])
+    dict.fromkeys([frontend_url, "http://localhost:3000", "http://127.0.0.1:3000"])
 )
 
 # Add CORS middleware to allow PDF.js to load PDFs

@@ -14,9 +14,22 @@ steps:
       - -ceu
       - |
         pip install --quiet --no-cache-dir -r requirements-dev.txt
-        python -m ruff check backend frontend scripts tests
-        python -m ruff format --check backend frontend scripts tests
+        python -m ruff check backend scripts tests
+        python -m ruff format --check backend scripts tests
         PYTHONPATH=/workspace PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider
+
+  - id: test-frontend
+    name: node:24-alpine
+    dir: frontend
+    entrypoint: sh
+    args:
+      - -ceu
+      - |
+        npm ci
+        npm run lint
+        npm run typecheck
+        npm run test
+        npm run build
 
   - id: build-backend
     name: gcr.io/cloud-builders/docker

@@ -140,6 +140,11 @@ def _period_from_question(question: str, now: datetime) -> str | None:
 
 def _ticker_positions(question: str, catalog: dict[str, tuple[str, ...]]) -> list[tuple[int, str]]:
     positions: list[tuple[int, str]] = []
+    alias_lookup = {
+        alias.casefold(): ticker
+        for ticker, aliases in catalog.items()
+        for alias in (ticker, *aliases)
+    }
     for ticker, aliases in catalog.items():
         for alias in (ticker, *aliases):
             match = re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", question, re.IGNORECASE)
@@ -147,7 +152,8 @@ def _ticker_positions(question: str, catalog: dict[str, tuple[str, ...]]) -> lis
                 positions.append((match.start(), ticker))
                 break
     for match in _SYMBOL_RE.finditer(question):
-        symbol = match.group(1).upper()
+        raw_symbol = match.group(1)
+        symbol = alias_lookup.get(raw_symbol.casefold(), raw_symbol.upper())
         if symbol not in _SYMBOL_STOPWORDS and (
             not re.fullmatch(r"Q[1-4]|FY\d{4}", symbol)
             and (match.group(0).startswith("$") or match.group(1).isupper())

@@ -1,21 +1,31 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from functools import lru_cache
 from html import escape
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
+from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 
 from ...vectorstore.chroma_store import ChromaVectorStore
 from ..dependencies import get_app_settings
-from ..services.highlight import build_search_phrase, source_text
+from ..services.highlight import build_search_phrase, build_search_phrases, source_text
 
 router = APIRouter()
+
+_STREAM_CHUNK_SIZE = 1024 * 1024
+
+
+@dataclass(frozen=True)
+class _DocumentSource:
+    filename: str
+    size: int
+    stream_range: Callable[[int, int], Iterator[bytes]]
 
 
 @lru_cache
@@ -63,7 +73,19 @@ def _resolve_local_path(path_value: str) -> Path | None:
     return portable_path if portable_path.is_file() else None
 
 
-def _load_document_from_bucket(path_value: str) -> tuple[Iterator[bytes], str] | None:
+def _stream_local_range(path: Path, start: int, length: int) -> Iterator[bytes]:
+    remaining = length
+    with path.open("rb") as source:
+        source.seek(start)
+        while remaining:
+            content = source.read(min(_STREAM_CHUNK_SIZE, remaining))
+            if not content:
+                break
+            remaining -= len(content)
+            yield content
+
+
+def _load_document_from_bucket(path_value: str) -> _DocumentSource | None:
     settings = get_app_settings()
     if not settings.document_bucket:
         return None
@@ -82,12 +104,53 @@ def _load_document_from_bucket(path_value: str) -> tuple[Iterator[bytes], str] |
     except NotFound:
         return None
 
-    def stream() -> Iterator[bytes]:
+    def stream_range(start: int, length: int) -> Iterator[bytes]:
+        remaining = length
         with blob.open("rb") as source:
-            while content := source.read(1024 * 1024):
+            source.seek(start)
+            while remaining:
+                content = source.read(min(_STREAM_CHUNK_SIZE, remaining))
+                if not content:
+                    break
+                remaining -= len(content)
                 yield content
 
-    return stream(), relative.name
+    return _DocumentSource(
+        filename=relative.name,
+        size=int(blob.size or 0),
+        stream_range=stream_range,
+    )
+
+
+def _parse_byte_range(range_header: str, size: int) -> tuple[int, int]:
+    """Return an inclusive single byte range or reject malformed/unsatisfiable input."""
+
+    unit, separator, value = range_header.strip().partition("=")
+    if separator != "=" or unit.strip().lower() != "bytes" or not value or "," in value:
+        raise ValueError("Only one byte range is supported.")
+
+    start_value, dash, end_value = value.strip().partition("-")
+    if dash != "-" or (not start_value and not end_value) or size <= 0:
+        raise ValueError("Invalid byte range.")
+    if (start_value and not start_value.isdigit()) or (end_value and not end_value.isdigit()):
+        raise ValueError("Invalid byte range.")
+
+    try:
+        if not start_value:
+            suffix_length = int(end_value)
+            if suffix_length <= 0:
+                raise ValueError("Invalid suffix byte range.")
+            start = max(size - suffix_length, 0)
+            end = size - 1
+        else:
+            start = int(start_value)
+            end = size - 1 if not end_value else min(int(end_value), size - 1)
+    except ValueError as exc:
+        raise ValueError("Invalid byte range.") from exc
+
+    if start < 0 or start >= size or end < start:
+        raise ValueError("Unsatisfiable byte range.")
+    return start, end
 
 
 def _format_snippet(text: str, phrase: str) -> str:
@@ -130,6 +193,7 @@ def get_document_file(
     doc_id: str,
     chunk_id: str,
     store: Annotated[ChromaVectorStore, Depends(_get_vector_store)],
+    range_header: Annotated[str | None, Header(alias="Range")] = None,
 ) -> Response:
     chunk = _load_chunk(doc_id, chunk_id, store)
     local_path_value = str(chunk.metadata.get("local_path") or "")
@@ -144,7 +208,16 @@ def get_document_file(
             status_code=404, detail="Document file not found on server or in document storage."
         )
 
-    filename = file_path.name if file_path else cloud_document[1]
+    if file_path:
+        source = _DocumentSource(
+            filename=file_path.name,
+            size=file_path.stat().st_size,
+            stream_range=lambda start, length: _stream_local_range(file_path, start, length),
+        )
+    else:
+        source = cloud_document
+
+    filename = source.filename
     safe_filename = filename.replace('"', "")
     suffix = Path(filename).suffix.lower()
     media_type = "text/html" if suffix == ".html" else "application/pdf"
@@ -155,10 +228,38 @@ def get_document_file(
         "Access-Control-Expose-Headers": "Accept-Ranges, Content-Length, Content-Range",
         "Content-Disposition": f'inline; filename="{safe_filename}"',
         "Cache-Control": "public, max-age=3600",
+        "Accept-Ranges": "bytes",
     }
-    if file_path:
-        return FileResponse(file_path, media_type=media_type, headers=headers)
-    return StreamingResponse(cloud_document[0], media_type=media_type, headers=headers)
+
+    if range_header:
+        try:
+            start, end = _parse_byte_range(range_header, source.size)
+        except ValueError:
+            return Response(
+                status_code=416,
+                headers={
+                    **headers,
+                    "Content-Range": f"bytes */{source.size}",
+                    "Content-Length": "0",
+                },
+            )
+        length = end - start + 1
+        return StreamingResponse(
+            source.stream_range(start, length),
+            status_code=206,
+            media_type=media_type,
+            headers={
+                **headers,
+                "Content-Range": f"bytes {start}-{end}/{source.size}",
+                "Content-Length": str(length),
+            },
+        )
+
+    return StreamingResponse(
+        source.stream_range(0, source.size),
+        media_type=media_type,
+        headers={**headers, "Content-Length": str(source.size)},
+    )
 
 
 @router.get(
@@ -179,12 +280,13 @@ def view_document_chunk(
 
     page = _positive_page(chunk.metadata.get("page_start"))
     phrase = build_search_phrase(chunk.text)
+    search_phrases = build_search_phrases(chunk.text)
     pdf_src = _document_endpoint(doc_id, chunk_id, "file")
     native_pdf_src = f"{pdf_src}#page={page}"
     snippet_html = _format_snippet(source_text(chunk.text), phrase)
 
     pdf_url_js = _json_for_script(pdf_src)
-    phrase_js = _json_for_script(phrase)
+    search_phrases_js = _json_for_script(search_phrases)
     page_js = _json_for_script(page)
     cdn_base = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.67"
 
@@ -572,7 +674,7 @@ def view_document_chunk(
         <script type="module">
             const pdfUrl = {pdf_url_js};
             const targetPage = {page_js};
-            const searchPhrase = {phrase_js};
+            const searchPhrases = {search_phrases_js};
             const cdnBase = {_json_for_script(cdn_base)};
             const loadingState = document.getElementById("loadingState");
             const viewer = document.getElementById("viewer");
@@ -583,7 +685,8 @@ def view_document_chunk(
             const pageCount = document.getElementById("pageCount");
             const zoomValue = document.getElementById("zoomValue");
             const controls = [...document.querySelectorAll(".control-button")];
-            let searchTimeout;
+            let activeSearchIndex = -1;
+            let searchFinished = false;
 
             function setStatus(message, state = "loading") {{
                 statusText.textContent = message;
@@ -608,6 +711,10 @@ def view_document_chunk(
                     : `${{Math.round(pdfViewer.currentScale * 100)}}%`;
             }}
 
+            function activeSearchPhrase() {{
+                return searchPhrases[activeSearchIndex] || "";
+            }}
+
             try {{
                 setStatus(`Loading page ${{targetPage}}`);
                 const pdfjsLib = await import(`${{cdnBase}}/build/pdf.min.mjs`);
@@ -630,6 +737,38 @@ def view_document_chunk(
                 linkService.setViewer(pdfViewer);
                 window.pdfViewerInstance = pdfViewer;
 
+                function searchNextCandidate() {{
+                    activeSearchIndex += 1;
+                    if (activeSearchIndex >= searchPhrases.length) {{
+                        searchFinished = true;
+                        setStatus(`Page ${{pdfViewer.currentPageNumber}} ready - exact text not found`, "ready");
+                        return;
+                    }}
+                    const query = activeSearchPhrase();
+                    setStatus(`Searching cited text on page ${{pdfViewer.currentPageNumber}}`);
+                    eventBus.dispatch("find", {{
+                        source: window,
+                        type: "",
+                        query,
+                        caseSensitive: false,
+                        entireWord: false,
+                        highlightAll: true,
+                        findPrevious: false,
+                        matchDiacritics: false,
+                    }});
+                }}
+
+                function navigateToRequestedPage() {{
+                    if (!pageNumber.value) return;
+                    const requested = Number.parseInt(pageNumber.value, 10);
+                    const currentPage = pdfViewer.currentPageNumber;
+                    const nextPage = Number.isFinite(requested)
+                        ? Math.max(1, Math.min(requested, pdfViewer.pagesCount))
+                        : currentPage;
+                    linkService.goToPage(nextPage);
+                    pageNumber.value = nextPage;
+                }}
+
                 eventBus.on("pagesinit", () => {{
                     const safePage = Math.min(targetPage, pdfViewer.pagesCount);
                     pdfViewer.currentScaleValue = "page-width";
@@ -643,37 +782,15 @@ def view_document_chunk(
                     updateZoom(pdfViewer);
                     setStatus(`Page ${{safePage}} ready`, "ready");
 
-                    if (searchPhrase) {{
-                        setStatus(`Searching cited text on page ${{safePage}}`);
-                        eventBus.dispatch("find", {{
-                            source: window,
-                            type: "",
-                            query: searchPhrase,
-                            phraseSearch: true,
-                            caseSensitive: false,
-                            entireWord: false,
-                            highlightAll: true,
-                            findPrevious: false,
-                            matchDiacritics: false,
-                        }});
-                        searchTimeout = window.setTimeout(() => {{
-                            setStatus(`Page ${{pdfViewer.currentPageNumber}} ready - exact text not found`, "ready");
-                        }}, 5000);
-                    }}
+                    if (searchPhrases.length) searchNextCandidate();
                 }});
 
                 eventBus.on("updatefindcontrolstate", (event) => {{
+                    if (searchFinished || event.rawQuery !== activeSearchPhrase()) return;
                     if (event.state === 1) {{
-                        window.clearTimeout(searchTimeout);
-                        setStatus(`Page ${{pdfViewer.currentPageNumber}} ready - exact text not found`, "ready");
+                        searchNextCandidate();
                     }} else if (event.state === 0 || event.state === 2) {{
-                        window.clearTimeout(searchTimeout);
-                        setStatus(`Citation highlighted on page ${{pdfViewer.currentPageNumber}}`, "ready");
-                    }}
-                }});
-                eventBus.on("updatefindmatchescount", (event) => {{
-                    if (event.matchesCount?.total > 0) {{
-                        window.clearTimeout(searchTimeout);
+                        searchFinished = true;
                         setStatus(`Citation highlighted on page ${{pdfViewer.currentPageNumber}}`, "ready");
                     }}
                 }});
@@ -692,10 +809,12 @@ def view_document_chunk(
                     pdfViewer.currentScaleValue = "page-width";
                     updateZoom(pdfViewer);
                 }});
-                pageNumber.addEventListener("change", () => {{
-                    const nextPage = Math.max(1, Math.min(Number(pageNumber.value), pdfViewer.pagesCount));
-                    pdfViewer.currentPageNumber = nextPage;
-                    pageNumber.value = nextPage;
+                pageNumber.addEventListener("input", navigateToRequestedPage);
+                pageNumber.addEventListener("change", navigateToRequestedPage);
+                pageNumber.addEventListener("keydown", (event) => {{
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    navigateToRequestedPage();
                 }});
 
                 const loadingTask = pdfjsLib.getDocument({{

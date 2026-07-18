@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from backend.app.schemas import ChatRequest
-from backend.app.services.citation import select_cited_chunks
+from backend.app.services.citation import build_citations, select_cited_chunks
 from backend.app.services.query_parser import QueryParser
 from backend.app.services.rag_service import RAGService, _generation_question
 from backend.app.services.retriever import Retriever
@@ -79,6 +79,12 @@ def test_query_parser_previous_quarter_and_optional_filters() -> None:
     assert parser.parse("How did margins change?") == (None, None, False, None)
 
 
+def test_query_parser_does_not_duplicate_uppercase_company_aliases() -> None:
+    parser = QueryParser()
+
+    assert parser.parse("What was NVIDIA revenue in Q3 2026?")[:2] == (["NVDA"], "Q3-2026")
+
+
 def test_retriever_fetches_wide_deduplicates_and_reranks() -> None:
     class Store:
         observed_k = 0
@@ -120,6 +126,18 @@ def test_citation_binding_never_pretends_uncited_evidence_was_used() -> None:
 
     assert selected == []
     assert debug["mode"] == "missing"
+
+
+def test_citation_excerpt_excludes_retrieval_only_context() -> None:
+    chunk = Chunk(
+        "a",
+        "Document: AAPL | Q2-2026 | 10-Q\n\nSection: revenue\n\nRevenue grew 10%.",
+        {"doc_id": "d", "chunk_id": "a"},
+    )
+
+    citation = build_citations([(chunk, 0.1)])[0]
+
+    assert citation.text == "Revenue grew 10%."
 
 
 def test_chat_scope_supports_latest_and_bounded_conversation_history() -> None:
@@ -184,5 +202,6 @@ def test_rag_orchestration_parses_scope_and_returns_only_answer_bound_evidence()
 
     assert store.where == {"$and": [{"ticker": {"$in": ["aapl"]}}, {"period": "Q2-2026"}]}
     assert [citation.chunk_id for citation in response.citations] == ["c1"]
+    assert [citation.source_id for citation in response.citations] == ["S1"]
     assert response.raw_context is None
     assert response.retrieval_debug["citation_binding"]["mode"] == "answer_bound"

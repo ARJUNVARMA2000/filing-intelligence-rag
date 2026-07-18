@@ -1,83 +1,46 @@
+import json
 from pathlib import Path
 
-import pytest
-import requests
-from streamlit.testing.v1 import AppTest
-
-from frontend.streamlit_app import ResearchServiceError, _post_json
-
-APP_PATH = Path(__file__).parents[1] / "frontend" / "streamlit_app.py"
+PROJECT_ROOT = Path(__file__).parents[1]
+FRONTEND_ROOT = PROJECT_ROOT / "frontend"
 
 
-def test_research_workspace_landing_renders_without_exceptions() -> None:
-    app = AppTest.from_file(str(APP_PATH), default_timeout=15)
+def test_frontend_is_a_typed_nextjs_application() -> None:
+    package = json.loads((FRONTEND_ROOT / "package.json").read_text(encoding="utf-8"))
 
-    app.run()
+    assert package["dependencies"]["next"]
+    assert package["dependencies"]["google-auth-library"]
+    assert package["scripts"]["typecheck"] == "tsc --noEmit"
+    assert (FRONTEND_ROOT / "src/app/page.tsx").is_file()
+    assert (FRONTEND_ROOT / "src/app/api/chat/route.ts").is_file()
+    assert not (FRONTEND_ROOT / "streamlit_app.py").exists()
+    assert not (PROJECT_ROOT / ".streamlit").exists()
 
-    assert not app.exception
-    assert len(app.chat_input) == 0
-    assert any(
-        field.placeholder == "Ask about revenue, margins, guidance, or risk…"
-        for field in app.text_input
+    env_example = (PROJECT_ROOT / ".env.example").read_text(encoding="utf-8")
+    assert "FRONTEND_URL=http://localhost:3000" in env_example
+    assert "FRONTEND_URL=http://localhost:8501" not in env_example
+
+
+def test_paid_api_is_reached_only_through_server_route_handlers() -> None:
+    client_sources = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (FRONTEND_ROOT / "src/components").glob("*.tsx")
     )
-    assert len(app.sidebar.text_input) == 2
-    assert len(app.sidebar.slider) == 1
-    assert any("Ask the filing" in block.value for block in app.markdown)
-    assert any("Research service offline" in block.value for block in app.markdown)
-    assert any("Revenue pulse" in button.label for button in app.button)
+    backend_helper = (FRONTEND_ROOT / "src/app/api/_lib/backend.ts").read_text(encoding="utf-8")
+
+    assert 'fetch("/api/chat"' in client_sources
+    assert 'fetch("/api/parse-query"' in client_sources
+    assert "FIN_RAG_API_BASE" not in client_sources
+    assert "getIdTokenClient" in backend_helper
+    assert "FIN_RAG_API_BASE" in backend_helper
 
 
-def test_conversation_and_evidence_states_render_without_exceptions() -> None:
-    app = AppTest.from_file(str(APP_PATH), default_timeout=15)
-    app.session_state["active_tickers"] = "AMZN"
-    app.session_state["active_period"] = "Q3 2025"
-    app.session_state["messages"] = [
-        {"role": "user", "content": "What changed in the quarter?"},
-        {
-            "role": "assistant",
-            "content": "Revenue increased, supported by the source evidence below.",
-            "context_tickers": ["AMZN", "<unsafe>"],
-            "context_period": "Q3 2025",
-            "clarification_needed": True,
-            "clarification_msg": "Confirm whether <script> should be in scope.",
-            "citations": [
-                {
-                    "ticker": "AMZN",
-                    "period": "Q3 2025",
-                    "filing_type": "10-Q",
-                    "doc_title": "Amazon <script> quarterly report",
-                    "page": 12,
-                    "line_start": 44,
-                    "line_end": 51,
-                    "relevance_score": 0.91,
-                    "highlight_url": "/documents/amzn-highlight.pdf",
-                    "text": "Representative source excerpt.",
-                }
-            ],
-        },
-    ]
+def test_frontend_container_uses_standalone_non_root_node_runtime() -> None:
+    dockerfile = (PROJECT_ROOT / "Dockerfile.frontend").read_text(encoding="utf-8")
 
-    app.run()
-
-    assert not app.exception
-    assert len(app.chat_message) == 2
-    assert len(app.chat_input) == 1
-    assert any("Evidence ledger · 01 sources" in expander.label for expander in app.expander)
-    rendered_markup = "\n".join(block.value for block in app.markdown)
-    assert "&lt;unsafe&gt;" in rendered_markup
-    assert "Amazon &lt;script&gt; quarterly report" in rendered_markup
-    assert "Confirm whether &lt;script&gt; should be in scope." in rendered_markup
-
-
-def test_api_transport_errors_are_sanitized(monkeypatch: pytest.MonkeyPatch) -> None:
-    def fail_request(*args, **kwargs):
-        raise requests.ConnectionError("private backend hostname and provider details")
-
-    monkeypatch.setattr(requests, "post", fail_request)
-
-    with pytest.raises(ResearchServiceError) as exc_info:
-        _post_json("/chat", {"question": "test"}, timeout=1)
-
-    message = str(exc_info.value)
-    assert "currently unavailable" in message
-    assert "private backend" not in message
+    assert "npm ci" in dockerfile
+    assert "npm run build" in dockerfile
+    assert "/app/.next/standalone" in dockerfile
+    assert "USER nextjs" in dockerfile
+    assert 'CMD ["node", "server.js"]' in dockerfile
+    assert "streamlit" not in dockerfile.lower()

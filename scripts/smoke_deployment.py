@@ -1,4 +1,4 @@
-"""End-to-end smoke test for the deployed Financial RAG services."""
+"""End-to-end smoke test for the deployed Filing Intelligence RAG services."""
 
 from __future__ import annotations
 
@@ -21,9 +21,15 @@ def request_json(url: str, *, payload: dict | None = None) -> tuple[int, dict]:
         return exc.code, body
 
 
-def fetch(url: str) -> tuple[int, str, bytes]:
-    with urlopen(quote(url, safe=":/?=&"), timeout=120) as response:
-        return response.status, response.headers.get_content_type(), response.read()
+def fetch(url: str, *, headers: dict[str, str] | None = None) -> tuple[int, str, dict, bytes]:
+    request = Request(quote(url, safe=":/?=&"), headers=headers or {})
+    with urlopen(request, timeout=120) as response:
+        return (
+            response.status,
+            response.headers.get_content_type(),
+            dict(response.headers.items()),
+            response.read(),
+        )
 
 
 def main() -> None:
@@ -41,8 +47,13 @@ def main() -> None:
     status, ready = request_json(f"{backend}/health/ready")
     assert status == 200 and ready.get("index_chunks", 0) > 0, ready
 
-    status, _, _ = fetch(f"{frontend}/_stcore/health")
-    assert status == 200
+    status, frontend_health = request_json(f"{frontend}/api/health")
+    assert status == 200 and frontend_health.get("ready") is True, frontend_health
+    assert frontend_health.get("indexChunks", 0) > 0, frontend_health
+
+    status, content_type, _, body = fetch(frontend)
+    assert status == 200 and content_type == "text/html"
+    assert b"Filing Intelligence" in body
 
     status, _ = request_json(
         f"{backend}/chat/parse-query",
@@ -62,15 +73,21 @@ def main() -> None:
     document_url = (
         urljoin(f"{backend}/", highlight_path.lstrip("/")).removesuffix("/viewer") + "/file"
     )
-    status, content_type, body = fetch(document_url)
-    assert status == 200 and content_type == "application/pdf" and body.startswith(b"%PDF")
+    status, content_type, headers, body = fetch(
+        document_url,
+        headers={"Range": "bytes=0-127"},
+    )
+    assert status == 206 and content_type == "application/pdf" and body.startswith(b"%PDF")
+    assert len(body) == 128
+    assert headers.get("Accept-Ranges") == "bytes"
+    assert headers.get("Content-Range", "").startswith("bytes 0-127/")
 
     print(
         json.dumps(
             {
                 "status": "passed",
                 "index_chunks": ready["index_chunks"],
-                "document_bytes": len(body),
+                "range_bytes": len(body),
             },
             indent=2,
         )

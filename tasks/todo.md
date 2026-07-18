@@ -1,5 +1,60 @@
 # Filing Intelligence RAG
 
+## README and product screenshot refresh - 2026-07-18
+
+### Plan
+
+- [x] Audit the README against the rewritten application, dependency manifests, scripts, deployment configuration, and current corpus metadata.
+- [x] Run the standalone production frontend against the local indexed backend and capture current desktop and 390 px mobile product screenshots.
+- [x] Restore the README product-preview section and update architecture, capabilities, setup, quality, deployment, and repository-layout details where needed.
+- [x] Verify screenshot dimensions and rendering, all local Markdown links, documented commands, configuration syntax, and final repository hygiene.
+
+### Acceptance criteria
+
+- README screenshots show the current warm editorial Next.js interface, never the removed Streamlit design.
+- Every version, command, architecture claim, endpoint, and corpus figure in the README matches the checked-in implementation or live/local verified state.
+- Desktop and mobile images are legible, responsive, free of console errors and horizontal overflow, and stored under stable repository paths.
+
+### Implementation review
+
+- Replaced both product captures with the current editorial Next.js workspace at desktop and 390 x 844 mobile sizes; both show the live 4,967-passage, 128-document, 15-company coverage state.
+- Updated the README to the production architecture, current service links, BFF security boundary, PDF viewer behavior, local commands, deployment smoke command, and the verified 64-Python / 6-frontend test baseline.
+- Verified the images visually, confirmed mobile has no horizontal overflow, and removed all historical frontend/deployment wording from the README.
+
+## Production web rewrite - 2026-07-18
+
+### Product direction
+
+- Replace the Streamlit workspace with a fast, responsive editorial research desk: warm paper, deep ink, restrained cobalt and vermilion signals, high-contrast typography, and purposeful motion.
+- Preserve the hardened FastAPI/RAG service, retrieval behavior, evidence provenance, and PDF citation viewer behind a typed server-side frontend boundary.
+- Make the result feel like an analyst product rather than a model demo: explicit scope, progressive research states, readable answers, inspectable evidence, and dependable mobile behavior.
+
+### Plan
+
+- [x] Map the existing UI workflows, API schemas, authentication boundary, citations, deployment contract, and test coverage.
+- [x] Define the Next.js application structure, design tokens, component system, client state, API proxy, failure model, and accessibility requirements.
+- [x] Replace Streamlit with the new application and remove the obsolete Python frontend runtime.
+- [x] Update Docker, local startup, Cloud Build, Railway, dependency manifests, documentation, and automated tests for the new stack.
+- [x] Verify Python and TypeScript quality gates, production builds, API proxy behavior, responsive layouts, reduced-motion behavior, and an end-to-end research flow.
+
+### Acceptance criteria
+
+- The browser never calls the protected paid chat API directly; frontend server routes add the Cloud Run identity token in production and preserve sanitized errors.
+- All current research features remain available: auto-scope parsing, explicit ticker/period filters, evidence depth, bounded conversation history, citations, excerpts, and cited-page links.
+- The interface is responsive and keyboard accessible, respects reduced motion, provides loading/empty/error states, and has no dependency on Streamlit.
+- Local development and production deployment are reproducible, documented, and covered by automated Python and frontend checks.
+
+### Implementation review
+
+- Replaced the 1,507-line Streamlit application with a Next.js 16 / React 19 / TypeScript workspace using local Newsreader and Public Sans fonts, custom editorial design tokens, Motion transitions, responsive research and evidence layouts, accessible controls, and reduced-motion support.
+- Added same-origin BFF routes for health, scope parsing, paid chat, and validated source redirects. The Node server obtains Google identity headers in production; browser code contains neither the backend URL nor service credentials.
+- Preserved auto-scope parsing, explicit ticker/period filters, evidence depth, bounded history, Markdown answers, citations, excerpts, relevance labels, and cited-page navigation. User-entered scope wins over inferred scope.
+- Added stable citation `source_id` values so answer markers retain their original evidence identities, and fixed uppercase company aliases such as `NVIDIA` being duplicated as raw ticker tokens.
+- Reworked the Node standalone build, non-root container, local launcher, Railway process, Cloud Build, GitHub quality workflow, dependencies, setup documentation, and architecture record. Removed Streamlit dependencies and obsolete green product screenshots.
+- Verification passed: ESLint, strict TypeScript, 6 Vitest checks, Next.js production build, zero production npm audit findings, Ruff lint/format, 64 Pytest checks, Python compilation, and `git diff --check`.
+- Hardened the highlighted-source flow with validated source redirects, real local/GCS single-byte-range delivery, robust PDF.js search candidates, state-driven no-match fallback, clamped cited-page navigation, and sanitized citation excerpts.
+- Browser QA passed against the standalone production server with live local corpus metadata: 4,967 passages, 128 documents, 15 companies, no console warnings/errors, and zero horizontal overflow at the default desktop viewport and 390×844 mobile viewport. The local Docker engine was unavailable, so container execution remains covered by the build definition and Cloud Build gate rather than a local image run.
+
 ## Filing Intelligence RAG rename - 2026-07-17
 
 ### Plan

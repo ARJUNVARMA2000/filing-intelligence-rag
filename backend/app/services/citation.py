@@ -6,7 +6,7 @@ from typing import Any
 
 from ...ingestion.metadata_schema import Chunk
 from ..schemas import Citation
-from .highlight import append_pdf_fragment, build_search_phrase
+from .highlight import append_pdf_fragment, build_search_phrase, source_text
 from .ranking import cosine_similarity
 
 _SOURCE_GROUP_RE = re.compile(r"\[((?:S\d+\s*,?\s*)+)\]", re.IGNORECASE)
@@ -71,11 +71,15 @@ def _build_highlight_url(chunk: Chunk) -> str | None:
     return source_url
 
 
-def build_citations(chunks_with_scores: list[tuple[Chunk, float]]) -> list[Citation]:
+def build_citations(
+    chunks_with_scores: list[tuple[Chunk, float]],
+    source_ids: list[str] | None = None,
+) -> list[Citation]:
     citations: list[Citation] = []
     seen: set[tuple[str, str]] = set()
-    for chunk, distance in chunks_with_scores:
+    for index, (chunk, distance) in enumerate(chunks_with_scores):
         metadata = chunk.metadata
+        excerpt = source_text(chunk.text)
         chunk_id = str(metadata.get("chunk_id") or chunk.chunk_id or "")
         key = (str(metadata.get("doc_id") or ""), chunk_id)
         if key in seen:
@@ -83,6 +87,7 @@ def build_citations(chunks_with_scores: list[tuple[Chunk, float]]) -> list[Citat
         seen.add(key)
         citations.append(
             Citation(
+                source_id=source_ids[index] if source_ids and index < len(source_ids) else None,
                 doc_id=key[0],
                 doc_title=str(metadata.get("title") or ""),
                 ticker=str(metadata.get("ticker") or "").upper(),
@@ -96,7 +101,7 @@ def build_citations(chunks_with_scores: list[tuple[Chunk, float]]) -> list[Citat
                 source_url=str(metadata.get("source_url") or "") or None,
                 chunk_id=chunk_id or None,
                 highlight_url=_build_highlight_url(chunk),
-                text=chunk.text[:500] if chunk.text else None,
+                text=excerpt[:500] or None,
                 relevance_score=max(0.0, min(1.0, cosine_similarity(distance))),
             )
         )

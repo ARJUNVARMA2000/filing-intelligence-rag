@@ -1,27 +1,42 @@
 # Filing Intelligence RAG
 
-An evidence-first financial research workspace for asking questions across filings, earnings decks, and call transcripts. FastAPI handles query normalization, retrieval, answer generation, and source delivery; Streamlit presents the result as an analyst workspace with a traceable evidence ledger.
+An evidence-first financial research workspace for asking questions across filings, earnings decks, and call transcripts. FastAPI handles query normalization, retrieval, answer generation, and source delivery; a Next.js 16 and React 19 web application presents the result as an analyst workspace with a traceable evidence ledger.
 
 > Filing Intelligence RAG is a research aid, not investment advice. Answers must be verified against the linked source documents before they are used in a financial decision.
 
 ## Product preview
 
-![Filing Intelligence RAG analyst workspace](docs/screenshots/filing-intelligence-rag-workspace.png)
+![Filing Intelligence research workspace](docs/screenshots/filing-intelligence-rag-workspace.png)
 
 <details>
-<summary>Mobile research workspace</summary>
+<summary>Mobile research workspace · 390 px viewport</summary>
 
 <p align="center">
-  <img src="docs/screenshots/filing-intelligence-rag-mobile.png" alt="Filing Intelligence RAG mobile workspace" width="390">
+  <img src="docs/screenshots/filing-intelligence-rag-mobile.png" alt="Filing Intelligence mobile research workspace" width="390">
 </p>
 
 </details>
 
-## Live portfolio demo
+The rewritten interface is a warm editorial research desk rather than a generic chat shell. It keeps the composer above the fold, gives explicit ticker and period scope precedence over inferred filters, and treats every answer as a briefing sheet with clickable `[S#]` markers and a persistent evidence margin. The evidence inspector exposes source excerpts, page and line provenance, retrieval relevance, and direct cited-page links.
+
+## Deployment status
+
+The screenshots above show the production Next.js workspace running against the packaged evidence index.
 
 - [Research workspace](https://filing-intelligence-rag-7pj7nolpla-uc.a.run.app)
 - [API readiness](https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app/health/ready)
 - [Data coverage](https://filing-intelligence-rag-api-7pj7nolpla-uc.a.run.app/health/data)
+
+## Release snapshot
+
+| Area | Current contract |
+| --- | --- |
+| Web application | Next.js 16.2.10, React 19.2.7, TypeScript 5.9.3, Motion 12.42.2 |
+| API runtime | Python 3.12, FastAPI 0.115.0, Chroma 1.3.5 |
+| Packaged corpus | 4,967 passages across 128 documents and 15 companies |
+| Embeddings | `chroma-default/all-MiniLM-L6-v2`, 384 dimensions, cosine distance |
+| Index artifact | Schema v2, built July 17, 2026 |
+| Deployed freshness | `unknown` for all tickers; the current corpus has local-source provenance but no fetch timestamps |
 
 ## What is implemented
 
@@ -33,13 +48,20 @@ An evidence-first financial research workspace for asking questions across filin
 - OpenAI and Vertex AI generation providers; an allowlisted OpenRouter path for controlled evaluations.
 - Explicit production authentication, bounded API schemas, sanitized failures, request IDs, health/readiness endpoints, and data-freshness reporting.
 - Incremental Quartr Public API synchronization with watermarks and sidecar provenance. The signed-in Quartr web application is not scraped.
-- A responsive institutional research UI with accessible states, evidence cards, scope controls, and deterministic Streamlit tests.
+- A responsive institutional research UI built with Next.js, React, TypeScript, Motion, and accessible evidence and scope controls.
+- A server-side backend-for-frontend (BFF) that keeps Google identity-token acquisition out of browser code and returns sanitized API failures.
+- Pinned ticker and period scope, inferred-scope clarification, bounded conversation history, clickable inline citations, and a responsive evidence inspector.
+- Deterministic Vitest coverage plus lint, type, dependency-audit, and standalone production-build gates for the web application.
+- Citation viewers that open on the cited page, search robust line and table-text anchors, and stream PDF byte ranges for reliable PDF.js rendering.
 
 ## Request path
 
 ```mermaid
 flowchart LR
-    Q["Validated question"] --> S["Ticker and fiscal-period scope"]
+    B["Browser"] --> F["Next.js workspace"]
+    F --> X["Server-side BFF"]
+    X -->|"Google identity token in production"| Q["Validated FastAPI request"]
+    Q --> S["Ticker and fiscal-period scope"]
     S --> R["Dense candidate retrieval"]
     R --> K["Deduplicate and rank evidence"]
     K --> C["Bounded [S#] context"]
@@ -55,12 +77,13 @@ The persisted index uses Chroma's explicit `all-MiniLM-L6-v2` embedding contract
 
 ## Local setup
 
-Prerequisites: Python 3.12 and PowerShell, Bash, or another terminal.
+Prerequisites: Python 3.12, Node.js 20.9 or newer, and PowerShell, Bash, or another terminal. CI and production containers use Node.js 24.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
+npm --prefix frontend install
 Copy-Item .env.example .env
 ```
 
@@ -70,14 +93,30 @@ Set `OPENAI_API_KEY` in `.env`, then start both services:
 python scripts/run_local.py
 ```
 
-The launcher restores `chroma_index.zip` into the ignored local index directory on first run. Open the UI at `http://localhost:8501`; the API and interactive schema are at `http://localhost:8000` and `http://localhost:8000/docs`.
+The launcher restores `chroma_index.zip` into the ignored local index directory on first run. Open the UI at `http://localhost:3000`; the API and interactive schema are at `http://localhost:8000` and `http://localhost:8000/docs`.
 
 For separate processes:
 
 ```powershell
 python -m uvicorn backend.app.main:app --reload --port 8000
-python -m streamlit run frontend/streamlit_app.py --server.port 8501
+npm --prefix frontend run dev
 ```
+
+The browser calls same-origin Next.js routes under `/api`. Those BFF routes forward chat, query parsing, and health requests to `FIN_RAG_API_BASE` and validate source links before redirecting to public document routes; in production they attach a Google-signed identity token to protected backend calls server-side. Do not expose backend credentials or identity tokens through `NEXT_PUBLIC_*` variables.
+
+Useful standalone frontend commands:
+
+```powershell
+npm --prefix frontend run dev
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck
+npm --prefix frontend run test
+npm --prefix frontend audit --omit=dev
+npm --prefix frontend run build
+npm --prefix frontend run start
+```
+
+Run `build` before `start`; the build step prepares the self-contained Next.js server and copies its static assets into the standalone output.
 
 ## Rebuild the index
 
@@ -108,13 +147,17 @@ See [DATA_FRESHNESS.md](DATA_FRESHNESS.md) for watermarks, storage, scheduling, 
 
 ```powershell
 $env:PYTHONDONTWRITEBYTECODE = "1"
-python -m ruff check backend frontend scripts tests
-python -m ruff format --check backend frontend scripts tests
+python -m ruff check backend scripts tests
+python -m ruff format --check backend scripts tests
 python -m pytest -q
-python -m compileall -q backend frontend scripts tests
+python -m compileall -q backend scripts tests
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck
+npm --prefix frontend run test
+npm --prefix frontend run build
 ```
 
-The test suite covers API contracts, auth boundaries, provider failures, query parsing, chunk provenance, retrieval/ranking, citation selection, index compatibility, local index restoration, document paths, data freshness, and frontend states. Deployment smoke checks are kept in `scripts/smoke_deployment.py` and require explicit service URLs.
+The current verification baseline is 64 Python checks and 6 frontend checks. The Python suite covers API contracts, auth boundaries, provider failures, query parsing, chunk provenance, retrieval/ranking, citation selection, index compatibility, local index restoration, PDF byte ranges, cited-page navigation, document paths, and data freshness. The frontend gates cover the same-origin BFF contract, validated source redirects, scope resolution, answer/evidence state, citation identity, linting, type safety, and the standalone production build.
 
 ```powershell
 python scripts/smoke_deployment.py `
@@ -128,7 +171,7 @@ Copy `.env.example` and review these groups:
 
 - `APP_ENV` / `AUTH_MODE`: local development may use `disabled`; production must use `google`.
 - `LLM_PROVIDER`: `openai` or `vertexai`, with the corresponding model credentials.
-- `FIN_RAG_API_BASE` / `FIN_RAG_AUTH_MODE`: frontend-to-backend connection and identity-token mode.
+- `FIN_RAG_API_BASE` / `FIN_RAG_AUTH_MODE`: server-side BFF connection and identity-token mode. Keep both as runtime server variables, not public browser configuration.
 - `DOCUMENT_BUCKET`: optional GCS bucket for source documents.
 - `QUARTR_API_KEY` / `DATA_*`: optional corpus synchronization and freshness policy.
 - `LLM_TIMEOUT_SECONDS`, `LLM_MAX_RETRIES`, and `LLM_MAX_OUTPUT_TOKENS`: bounded provider behavior.
@@ -138,13 +181,13 @@ The API rejects unknown request fields, invalid ticker/period formats, retrieval
 ## Deployment
 
 - `Dockerfile.backend` packages the API and versioned Chroma archive.
-- `Dockerfile.frontend` installs only UI/runtime-auth dependencies.
+- `Dockerfile.frontend` builds a Node 24 standalone Next.js image and runs it as a non-root user.
 - `cloudbuild.yaml` tests, builds, pushes, and deploys the portfolio `filing-intelligence-rag-api` and `filing-intelligence-rag` Cloud Run services with explicit production auth and readiness probes.
 - `cloudbuild.refresh.yaml` synchronizes the corpus, rebuilds the index, publishes durable state, and deploys an immutable `filing-intelligence-rag-api` revision.
 
 Deployment is explicit: the local test suite never mutates cloud resources. Review substitutions, IAM service accounts, Secret Manager grants, Artifact Registry, and the document bucket before running either build.
 
-The production release uses Google-authenticated frontend-to-backend calls for paid model routes while keeping health and citation documents publicly readable. Direct unauthenticated chat requests are rejected.
+The Next.js release uses the BFF as its trust boundary: its Cloud Run service account acquires a Google identity token for paid backend routes, while the browser communicates only with same-origin `/api` routes. Health endpoints and cited document viewer/files remain publicly readable, and direct unauthenticated chat requests are rejected.
 
 ## Repository map
 
@@ -152,7 +195,7 @@ The production release uses Google-authenticated frontend-to-backend calls for p
 backend/app/             API, provider clients, security, RAG orchestration
 backend/ingestion/       source metadata, parsers, chunking, index manifest/build
 backend/vectorstore/     Chroma persistence and retrieval boundary
-frontend/                Streamlit analyst workspace
+frontend/                Next.js workspace, BFF routes, components, tests, and styles
 scripts/                 local launcher, sync, indexing, evaluation, smoke checks
 tests/                   deterministic unit and integration tests
 tasks/                   implementation plan, architecture, and review evidence

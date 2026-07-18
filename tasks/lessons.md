@@ -1,5 +1,9 @@
 # Lessons
 
+## Product documentation during UI rewrites
+
+- When replacing a documented frontend, regenerate the product screenshots in the same change instead of removing the preview. Treat current desktop and mobile captures as part of the release artifact and verify them against the production build before handoff.
+
 ## PDF citation viewers
 
 - Verify the exact asset names and module format for the pinned PDF.js distribution before integrating it; a version number alone does not make legacy `.js` paths compatible with an ES-module release.

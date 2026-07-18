@@ -203,7 +203,7 @@ class RAGService:
         cited, citation_binding = select_cited_chunks(answer_text, ranked)
         return ChatResponse(
             answer=answer_text,
-            citations=build_citations(cited),
+            citations=build_citations(cited, citation_binding["source_ids"]),
             raw_context=None,
             model=model_used,
             usage=usage,

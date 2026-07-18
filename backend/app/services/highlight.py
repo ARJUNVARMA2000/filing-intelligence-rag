@@ -4,6 +4,7 @@ import re
 from urllib.parse import quote
 
 _SYNTHETIC_PREFIX_RE = re.compile(r"^(?:document|section):", re.IGNORECASE)
+_SOURCE_BOUNDARY_RE = re.compile(r"[\n|\u2022\u25aa\u25cf]+")
 
 
 def source_text(text: str) -> str:
@@ -25,6 +26,39 @@ def build_search_phrase(text: str, max_words: int = 12) -> str:
         return ""
     words = normalized.split()
     return " ".join(words[:max_words])
+
+
+def build_search_phrases(
+    text: str,
+    max_words: int = 12,
+    fallback_words: int = 6,
+    max_candidates: int = 10,
+) -> list[str]:
+    """Build ordered exact-match candidates for irregular PDF text layers."""
+
+    source = source_text(text)
+    if not source or max_words < 1 or max_candidates < 1:
+        return []
+
+    candidates: list[str] = []
+
+    def add_candidate(value: str) -> None:
+        words = " ".join(value.replace("|", " ").split()).split()
+        if len(words) < 4:
+            return
+        for limit in (max_words, fallback_words):
+            phrase = " ".join(words[:limit])
+            if phrase and phrase not in candidates:
+                candidates.append(phrase)
+
+    # PDF text layers commonly reorder headings, chart labels, and table cells.
+    # Search source lines/cells first, then retain the normalized whole passage.
+    for segment in _SOURCE_BOUNDARY_RE.split(source):
+        add_candidate(segment)
+        if len(candidates) >= max_candidates:
+            return candidates[:max_candidates]
+    add_candidate(source)
+    return candidates[:max_candidates]
 
 
 def append_pdf_fragment(base: str, page: int | None, phrase: str) -> str:

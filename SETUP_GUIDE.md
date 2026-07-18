@@ -4,13 +4,44 @@ The canonical quick start is in [README.md](README.md). This guide records the o
 
 ## Local modes
 
-Use `APP_ENV=local` and `AUTH_MODE=disabled` only on a developer machine. The API refuses an auth bypass when `APP_ENV` is production. When the frontend and backend are run separately, keep `FIN_RAG_API_BASE=http://localhost:8000` and `FIN_RAG_AUTH_MODE=local`.
+Install Python 3.12 and Node.js 24. Use `APP_ENV=local` and `AUTH_MODE=disabled` only on a developer machine. The API refuses an auth bypass when `APP_ENV` is production. Keep `FIN_RAG_API_BASE=http://localhost:8000`, `FIN_RAG_AUTH_MODE=local`, and `FRONTEND_URL=http://localhost:3000` for local development.
 
-The bundled index is restored automatically by `python scripts/run_local.py`. If running the processes manually, restore it once with:
+Install both dependency sets from the repository root:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+npm --prefix frontend install
+Copy-Item .env.example .env
+```
+
+Set `OPENAI_API_KEY` in `.env`, then start both services:
+
+```powershell
+python scripts/run_local.py
+```
+
+The bundled index is restored automatically by the launcher. The Next.js workspace is available at `http://localhost:3000`, with FastAPI at `http://localhost:8000`. If running the processes manually, restore the index once and start each service in its own terminal:
 
 ```powershell
 python -m zipfile -e chroma_index.zip data/indexes
+python -m uvicorn backend.app.main:app --reload --port 8000
+npm --prefix frontend run dev
 ```
+
+Frontend-only verification and production compilation are available with:
+
+```powershell
+npm --prefix frontend run test
+npm --prefix frontend run build
+```
+
+## BFF boundary
+
+The browser talks only to same-origin Next.js `/api` routes. The BFF forwards chat, scope parsing, and health requests to the FastAPI service configured by `FIN_RAG_API_BASE`; its source route validates document paths before redirecting to the backend's public document endpoints.
+
+With `FIN_RAG_AUTH_MODE=local`, the BFF sends no authorization header and the locally configured backend accepts the request. With `FIN_RAG_AUTH_MODE=google`, the BFF uses its runtime service account to mint a Google identity token for the backend audience. Token acquisition remains server-side; never place service credentials, backend tokens, or these settings in `NEXT_PUBLIC_*` variables.
 
 ## Production mode
 
@@ -29,7 +60,7 @@ Production requires:
 - `FIN_RAG_AUTH_MODE=google` on the frontend
 - one configured generation provider (`LLM_PROVIDER=openai` or `vertexai`)
 
-The backend can remain network-reachable for public source documents while the paid `/chat` routes verify a Google-signed identity token. For stricter isolation, split source delivery into a separate public service and enforce Cloud Run IAM on the API service.
+The Next.js BFF is the production identity boundary. Its runtime service account obtains the Google-signed token accepted by the paid `/chat` routes; browser code never handles that token. The backend can remain network-reachable for public source documents while paid routes verify the BFF identity. For stricter isolation, split source delivery into a separate public service and enforce Cloud Run IAM on the API service.
 
 The default Cloud Build configuration targets the `filing-intelligence-rag-api` and `filing-intelligence-rag` services:
 
@@ -45,6 +76,22 @@ gcloud builds submit --config cloudbuild.yaml --project agentic-ai-487000 .
 - Every chat response or sanitized error includes `X-Request-ID`; use it to correlate application logs.
 
 Do not put provider exception text, tokens, service-account JSON, or Quartr credentials in bug reports. The UI and API intentionally return sanitized recovery messages.
+
+## Quality gates
+
+Run the same backend and frontend checks enforced by CI:
+
+```powershell
+$env:PYTHONDONTWRITEBYTECODE = "1"
+python -m ruff check backend scripts tests
+python -m ruff format --check backend scripts tests
+python -m pytest -q
+python -m compileall -q backend scripts tests
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck
+npm --prefix frontend run test
+npm --prefix frontend run build
+```
 
 ## Corpus rebuild checklist
 

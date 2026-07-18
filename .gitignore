@@ -30,6 +30,13 @@ data/indexes/
 htmlcov/
 /tmp/
 
+# Web application
+frontend/node_modules/
+frontend/.next/
+frontend/coverage/
+frontend/*.tsbuildinfo
+frontend/.env*
+
 # Docs not meant for version control
 DEPLOYMENT.md
 

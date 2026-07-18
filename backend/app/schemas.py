@@ -22,6 +22,7 @@ class RequestModel(BaseModel):
 
 
 class Citation(BaseModel):
+    source_id: str | None = None
     doc_id: str
     doc_title: str | None = None
     ticker: str | None = None

@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -7,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app
 from backend.app.routes.documents import (
+    _get_vector_store,
     _json_for_script,
     _raw_relative_path,
     _resolve_local_path,
@@ -14,7 +16,7 @@ from backend.app.routes.documents import (
     view_document_chunk,
 )
 from backend.app.security import require_frontend_identity
-from backend.app.services.highlight import build_search_phrase, source_text
+from backend.app.services.highlight import build_search_phrase, build_search_phrases, source_text
 
 
 def test_basic_health_endpoint() -> None:
@@ -84,6 +86,120 @@ def test_document_file_is_inline_and_exposes_range_headers(
     assert response.headers["content-disposition"] == 'inline; filename="earnings.pdf"'
     assert response.headers["access-control-allow-headers"] == "Range"
     assert "Content-Range" in response.headers["access-control-expose-headers"]
+    assert response.headers["accept-ranges"] == "bytes"
+    assert response.headers["content-length"] == str(document_path.stat().st_size)
+
+
+def test_local_document_file_serves_a_single_byte_range(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw_dir = tmp_path / "data" / "raw"
+    document_path = raw_dir / "nvda" / "earnings.pdf"
+    document_path.parent.mkdir(parents=True)
+    document_path.write_bytes(b"0123456789")
+    chunk = SimpleNamespace(
+        text="Revenue was $57.0 billion.",
+        metadata={"doc_id": "doc-1", "local_path": str(document_path)},
+    )
+    monkeypatch.setattr(
+        "backend.app.routes.documents.get_app_settings",
+        lambda: SimpleNamespace(raw_dir=raw_dir, document_bucket=None),
+    )
+    app.dependency_overrides[_get_vector_store] = lambda: SimpleNamespace(get_chunk=lambda _: chunk)
+
+    try:
+        response = TestClient(app).get(
+            "/documents/doc-1/chunks/chunk-1/file",
+            headers={"Range": "bytes=2-5"},
+        )
+    finally:
+        app.dependency_overrides.pop(_get_vector_store, None)
+
+    assert response.status_code == 206
+    assert response.content == b"2345"
+    assert response.headers["accept-ranges"] == "bytes"
+    assert response.headers["content-range"] == "bytes 2-5/10"
+    assert response.headers["content-length"] == "4"
+
+
+def test_gcs_document_file_serves_a_suffix_byte_range(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    data = b"cloud-document"
+
+    class FakeBlob:
+        size = len(data)
+
+        def reload(self) -> None:
+            return None
+
+        def open(self, mode: str):
+            assert mode == "rb"
+            return io.BytesIO(data)
+
+    fake_blob = FakeBlob()
+    fake_bucket = SimpleNamespace(blob=lambda _: fake_blob)
+    fake_client = SimpleNamespace(bucket=lambda _: fake_bucket)
+    raw_dir = tmp_path / "data" / "raw"
+    chunk = SimpleNamespace(
+        text="Revenue was $57.0 billion.",
+        metadata={"doc_id": "doc-1", "local_path": "data/raw/nvda/earnings.pdf"},
+    )
+    monkeypatch.setattr("google.cloud.storage.Client", lambda: fake_client)
+    monkeypatch.setattr(
+        "backend.app.routes.documents.get_app_settings",
+        lambda: SimpleNamespace(raw_dir=raw_dir, document_bucket="documents"),
+    )
+    app.dependency_overrides[_get_vector_store] = lambda: SimpleNamespace(get_chunk=lambda _: chunk)
+
+    try:
+        response = TestClient(app).get(
+            "/documents/doc-1/chunks/chunk-1/file",
+            headers={"Range": "bytes=-4"},
+        )
+    finally:
+        app.dependency_overrides.pop(_get_vector_store, None)
+
+    assert response.status_code == 206
+    assert response.content == b"ment"
+    assert response.headers["content-range"] == "bytes 10-13/14"
+    assert response.headers["content-length"] == "4"
+
+
+@pytest.mark.parametrize(
+    "range_header",
+    ["bytes=10-", "bytes=4-2", "bytes=-0", "bytes=0-1,4-5", "items=0-1"],
+)
+def test_document_file_rejects_unsatisfiable_or_unsupported_ranges(
+    range_header: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw_dir = tmp_path / "data" / "raw"
+    document_path = raw_dir / "nvda" / "earnings.pdf"
+    document_path.parent.mkdir(parents=True)
+    document_path.write_bytes(b"0123456789")
+    chunk = SimpleNamespace(
+        text="Revenue was $57.0 billion.",
+        metadata={"doc_id": "doc-1", "local_path": str(document_path)},
+    )
+    monkeypatch.setattr(
+        "backend.app.routes.documents.get_app_settings",
+        lambda: SimpleNamespace(raw_dir=raw_dir, document_bucket=None),
+    )
+    app.dependency_overrides[_get_vector_store] = lambda: SimpleNamespace(get_chunk=lambda _: chunk)
+
+    try:
+        response = TestClient(app).get(
+            "/documents/doc-1/chunks/chunk-1/file",
+            headers={"Range": range_header},
+        )
+    finally:
+        app.dependency_overrides.pop(_get_vector_store, None)
+
+    assert response.status_code == 416
+    assert response.content == b""
+    assert response.headers["accept-ranges"] == "bytes"
+    assert response.headers["content-range"] == "bytes */10"
+    assert response.headers["content-length"] == "0"
 
 
 def test_document_viewer_uses_consistent_pdfjs_assets_and_safe_fallback() -> None:
@@ -116,6 +232,12 @@ def test_document_viewer_uses_consistent_pdfjs_assets_and_safe_fallback() -> Non
     assert 'iframe title="Source PDF fallback"' in html
     assert 'iframe title="Source PDF fallback" src=' not in html
     assert 'eventBus.dispatch("find"' in html
+    assert "window.setTimeout" not in html
+    assert "event.rawQuery !== activeSearchPhrase()" in html
+    assert 'pageNumber.addEventListener("input", navigateToRequestedPage)' in html
+    assert 'pageNumber.addEventListener("change", navigateToRequestedPage)' in html
+    assert 'pageNumber.addEventListener("keydown"' in html
+    assert "linkService.goToPage(nextPage)" in html
     assert "position: absolute; inset: 0" in html
     assert "viewer," in html
     assert "NVIDIA &lt;results&gt;" in html
@@ -137,6 +259,19 @@ Record revenue | was $57.0 billion, up 62% from a year ago."""
     assert build_search_phrase(chunk_text) == (
         "Record revenue was $57.0 billion, up 62% from a year ago."
     )
+
+
+def test_highlight_candidates_include_bullet_text_when_slide_order_is_irregular() -> None:
+    chunk_text = """Document: NVDA | Q1-2026 | Investor deck
+
+Data Center Highlights 73% Y/Y and | Recognized $4.6B in H20 revenue; also recognized a charge
+\u2022 Blackwell represented nearly 70% of compute revenue in Q1."""
+
+    candidates = build_search_phrases(chunk_text)
+
+    assert candidates[0] == "Data Center Highlights 73% Y/Y and"
+    assert "Recognized $4.6B in H20 revenue; also recognized a charge" in candidates
+    assert "Blackwell represented nearly 70% of compute revenue in Q1." in candidates
 
 
 def test_script_json_escapes_html_control_characters() -> None:
