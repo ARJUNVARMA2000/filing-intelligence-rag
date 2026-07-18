@@ -7,8 +7,8 @@
 - [x] Inventory repository, documentation, product branding, Cloud Run services, images, and shared-resource boundaries.
 - [x] Rename only the standalone GitHub repository and retarget this checkout's origin and push safeguard.
 - [x] Replace active portfolio branding and deployment targets with `Filing Intelligence RAG`, `filing-intelligence-rag`, and `filing-intelligence-rag-api` while preserving compatibility identifiers and application behavior.
-- [ ] Run the complete local release gate, commit, push, deploy isolated services, and verify CI and live behavior.
-- [ ] Remove only superseded standalone `finrag-research*` services/images after the Filing Intelligence RAG deployment passes; verify the shared repository and services remain untouched.
+- [x] Run the complete local release gate, commit, push, deploy isolated services, and verify CI and live behavior.
+- [x] Remove only superseded standalone `finrag-research*` services/images after the Filing Intelligence RAG deployment passes; verify the shared repository and services remain untouched.
 
 ### Acceptance criteria
 
@@ -17,6 +17,17 @@
 - Shared `Financial-RAG`, `finrag-frontend`, and `finrag-backend` resources receive no writes or configuration changes.
 - Documentation contains only the current Filing Intelligence RAG deployment links and regenerated Filing Intelligence RAG screenshots.
 - Local checks, GitHub Actions, Cloud Build, live smoke tests, PDF citation rendering, and local/remote commit parity all pass.
+
+### Implementation review
+
+- Renamed the private, parentless standalone repository to `ARJUNVARMA2000/filing-intelligence-rag`, updated its homepage, and retargeted this checkout's sole fetch/push remote and allowlist hook.
+- Rebranded the product and deployment targets as Filing Intelligence RAG while preserving the existing `FIN_RAG_*` environment contract, shared IAM identities, Artifact Registry repository, document bucket, data, and application behavior.
+- Local Ruff lint/format, compilation, YAML parsing, `git diff --check`, and all 54 tests pass; GitHub Actions also passed on the release commit.
+- Cloud Build `548f6169-2aff-4cfb-99ed-a63fe54751f3` deployed `filing-intelligence-rag-00001-hql` and `filing-intelligence-rag-api-00001-n6c` with 100% traffic and correctly paired frontend/backend URLs.
+- Live smoke verification found 4,967 indexed chunks and streamed the 597,845-byte representative source PDF. Browser QA returned NVIDIA Q3 2026 revenue of $57.0 billion, opened page 10, rendered five non-zero canvases, produced nine highlight elements, kept the native fallback hidden, and reported no console or Cloud Run errors.
+- Regenerated the desktop and 390 px mobile product screenshots with Filing Intelligence RAG branding and no horizontal overflow.
+- Deleted only the superseded standalone `finrag-research`/`finrag-research-api` services and image packages. The cancelled Sourcebound build created no services or packages.
+- Rechecked the shared boundary after cleanup: `Financial-RAG` main remained `3603f3e6`, `finrag-backend` remained generation 13 on `finrag-backend-00011-tbc`, and `finrag-frontend` remained generation 12 with 100% traffic on `finrag-frontend-00001-thc`.
 
 ## Portfolio product rebrand - 2026-07-17
 
