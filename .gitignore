@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+
+# Project specific
+data/indexes/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+/tmp/
+
+# Docs not meant for version control
+DEPLOYMENT.md
+
+financial-rag-cdk-infra

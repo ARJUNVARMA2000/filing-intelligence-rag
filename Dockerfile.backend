@@ -1,0 +1,31 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install only backend dependencies. Copying the manifest before source keeps
+# the expensive dependency layer cacheable across application-only changes.
+COPY requirements-backend.txt .
+RUN pip install --no-cache-dir -r requirements-backend.txt
+
+# Copy backend source code
+COPY backend/ backend/
+
+# Restore the versioned, pre-built ChromaDB index. The extracted directory is
+# intentionally gitignored; chroma_index.zip is the reproducible build artifact.
+COPY chroma_index.zip .
+RUN python -m zipfile -e chroma_index.zip data/indexes \
+    && rm chroma_index.zip
+
+# Create empty data/raw dir (config.py expects it)
+RUN mkdir -p data/raw data/processed \
+    && useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+# Cloud Run sets PORT env var (default 8080)
+ENV PORT=8080 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+USER appuser
+
+CMD ["sh", "-c", "exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT}"]

@@ -1,0 +1,98 @@
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: finrag-repo
+  _BACKEND_SERVICE: arjun-finrag-backend
+  _FRONTEND_SERVICE: arjun-finrag-frontend
+  _BACKEND_URL: https://arjun-finrag-backend-7pj7nolpla-uc.a.run.app
+  _FRONTEND_URL: https://arjun-finrag-frontend-7pj7nolpla-uc.a.run.app
+
+steps:
+  - id: test
+    name: python:3.12-slim
+    entrypoint: bash
+    args:
+      - -ceu
+      - |
+        pip install --quiet --no-cache-dir -r requirements-dev.txt
+        python -m ruff check backend frontend scripts tests
+        python -m ruff format --check backend frontend scripts tests
+        PYTHONPATH=/workspace PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider
+
+  - id: build-backend
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_BACKEND_SERVICE}:$BUILD_ID
+      - --file=Dockerfile.backend
+      - .
+
+  - id: build-frontend
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:$BUILD_ID
+      - --file=Dockerfile.frontend
+      - .
+
+  - id: push-backend
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_BACKEND_SERVICE}:$BUILD_ID
+
+  - id: push-frontend
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:$BUILD_ID
+
+  - id: deploy-backend
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_BACKEND_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_BACKEND_SERVICE}:$BUILD_ID
+      - --region=${_REGION}
+      - --service-account=finrag-backend@$PROJECT_ID.iam.gserviceaccount.com
+      - --set-env-vars=APP_ENV=production,AUTH_MODE=google,LLM_PROVIDER=vertexai,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,VERTEX_LOCATION=global,VERTEX_CHAT_MODEL=gemini-2.5-flash,FRONTEND_URL=${_FRONTEND_URL},FRONTEND_SERVICE_ACCOUNT=finrag-frontend@$PROJECT_ID.iam.gserviceaccount.com,BACKEND_AUDIENCE=${_BACKEND_URL},DOCUMENT_BUCKET=$PROJECT_ID-finrag-documents
+      - --set-secrets=OPENROUTER_API_KEY=openrouter-api-key:latest
+      - --memory=1Gi
+      - --cpu=1
+      - --concurrency=8
+      - --timeout=300
+      - --min-instances=0
+      - --max-instances=3
+      - --startup-probe=httpGet.path=/health/ready,httpGet.port=8080,initialDelaySeconds=0,timeoutSeconds=2,periodSeconds=5,failureThreshold=24
+      - --allow-unauthenticated
+      - --quiet
+
+  - id: deploy-frontend
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_FRONTEND_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:$BUILD_ID
+      - --region=${_REGION}
+      - --service-account=finrag-frontend@$PROJECT_ID.iam.gserviceaccount.com
+      - --set-env-vars=FIN_RAG_API_BASE=${_BACKEND_URL},FIN_RAG_AUTH_MODE=google
+      - --memory=512Mi
+      - --cpu=1
+      - --concurrency=20
+      - --timeout=300
+      - --min-instances=0
+      - --max-instances=3
+      - --allow-unauthenticated
+      - --quiet
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_BACKEND_SERVICE}:$BUILD_ID
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:$BUILD_ID
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 1800s

@@ -1,0 +1,23 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install only the UI and service-authentication dependencies.
+COPY requirements-frontend.txt .
+RUN pip install --no-cache-dir -r requirements-frontend.txt
+
+# Copy frontend source
+COPY frontend/ frontend/
+COPY .streamlit/ .streamlit/
+
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+
+# Cloud Run sets PORT env var (default 8501 for Streamlit)
+ENV PORT=8501 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+USER appuser
+
+CMD ["sh", "-c", "exec streamlit run frontend/streamlit_app.py --server.port=${PORT} --server.address=0.0.0.0 --server.headless=true"]

@@ -1,0 +1,36 @@
+.git
+.gitignore
+.env
+*.env
+
+# Large raw data is served from Cloud Storage at runtime
+data/raw/
+data/eval/
+
+# Build artifacts
+__pycache__
+*.pyc
+venv/
+.venv/
+
+# Scripts (build-time only)
+scripts/
+tests/
+tasks/
+.github/
+
+# Railway configs
+Procfile
+Procfile.frontend
+railway.json
+
+# Docs
+README.md
+SETUP_GUIDE.md
+DATA_FRESHNESS.md
+DEPLOYMENT.md
+env.example.txt
+
+# Dockerfiles (don't copy into images)
+Dockerfile.*
+.dockerignore
