@@ -32,7 +32,6 @@ class VertexAIClient:
                 contents=user_message,
                 config=self._types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.1,
                     max_output_tokens=self.max_output_tokens,
                 ),
             )

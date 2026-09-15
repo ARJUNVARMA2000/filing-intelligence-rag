@@ -26,7 +26,7 @@ class Settings(BaseModel):
     document_bucket: str = ""
     gcp_project: str = ""
     vertex_location: str = "global"
-    vertex_chat_model: str = "gemini-2.5-flash"
+    vertex_chat_model: str = "gemini-3.5-flash-lite"
     frontend_service_account: str = ""
     backend_audience: str = ""
     quartr_api_key: str = ""
@@ -66,7 +66,7 @@ def get_settings(*, validate_llm: bool = True) -> Settings:
         document_bucket=os.environ.get("DOCUMENT_BUCKET", ""),
         gcp_project=os.environ.get("GOOGLE_CLOUD_PROJECT", "") or os.environ.get("GCP_PROJECT", ""),
         vertex_location=os.environ.get("VERTEX_LOCATION", "global"),
-        vertex_chat_model=os.environ.get("VERTEX_CHAT_MODEL", "gemini-2.5-flash"),
+        vertex_chat_model=os.environ.get("VERTEX_CHAT_MODEL", "gemini-3.5-flash-lite"),
         frontend_service_account=os.environ.get("FRONTEND_SERVICE_ACCOUNT", ""),
         backend_audience=os.environ.get("BACKEND_AUDIENCE", ""),
         quartr_api_key=os.environ.get("QUARTR_API_KEY", ""),
