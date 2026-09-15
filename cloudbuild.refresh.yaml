@@ -101,7 +101,7 @@ steps:
       - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_BACKEND_SERVICE}:$BUILD_ID
       - --region=${_REGION}
       - --service-account=finrag-backend@$PROJECT_ID.iam.gserviceaccount.com
-      - --set-env-vars=APP_ENV=production,AUTH_MODE=google,LLM_PROVIDER=vertexai,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,VERTEX_LOCATION=global,VERTEX_CHAT_MODEL=gemini-2.5-flash,FRONTEND_URL=${_FRONTEND_URL},FRONTEND_SERVICE_ACCOUNT=finrag-frontend@$PROJECT_ID.iam.gserviceaccount.com,BACKEND_AUDIENCE=${_BACKEND_URL},DOCUMENT_BUCKET=$PROJECT_ID-finrag-documents,DATA_MAX_AGE_HOURS=168
+      - --set-env-vars=APP_ENV=production,AUTH_MODE=google,LLM_PROVIDER=vertexai,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,VERTEX_LOCATION=global,VERTEX_CHAT_MODEL=gemini-3.5-flash-lite,FRONTEND_URL=${_FRONTEND_URL},FRONTEND_SERVICE_ACCOUNT=finrag-frontend@$PROJECT_ID.iam.gserviceaccount.com,BACKEND_AUDIENCE=${_BACKEND_URL},DOCUMENT_BUCKET=$PROJECT_ID-finrag-documents,DATA_MAX_AGE_HOURS=168
       - --set-secrets=OPENROUTER_API_KEY=openrouter-api-key:latest
       - --memory=1Gi
       - --cpu=1

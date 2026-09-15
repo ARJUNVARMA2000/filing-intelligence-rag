@@ -112,3 +112,7 @@ python scripts/run_eval.py --csv data/eval/questions_finaleval.csv --models clau
 ```
 
 Evaluation is a cost-bearing operation and model names are restricted to `backend/app/models_registry.py`. Keep retrieval failures separate from answer-quality scores and record the index/prompt configuration with each result set.
+
+## Vertex model configuration
+
+The Vertex provider defaults to GA `gemini-3.5-flash-lite` at `VERTEX_LOCATION=global`. Override it with `VERTEX_CHAT_MODEL` and a location supported by that model. Both Cloud Build configurations set the same default explicitly; deploy the updated configuration to replace an existing service-level model override. The Google Gen AI SDK requires version 2.x. Gemini 3.5 Flash-Lite uses fixed sampling defaults, so the client does not send a custom temperature.

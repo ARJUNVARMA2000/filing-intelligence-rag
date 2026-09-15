@@ -203,3 +203,7 @@ scripts/                 local launcher, sync, indexing, evaluation, smoke check
 tests/                   deterministic unit and integration tests
 tasks/                   implementation plan, architecture, and review evidence
 ```
+
+### Gemini evaluation models
+
+The `gemini-3-pro` alias now resolves to OpenRouter `google/gemini-3.1-pro-preview`, replacing the unavailable Gemini 3 Pro endpoint. Saved evaluation results retain their original model labels and scores. The `gemini-3-flash` mapping is unchanged and remains available in the OpenRouter catalog.

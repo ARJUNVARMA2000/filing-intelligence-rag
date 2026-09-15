@@ -294,3 +294,19 @@
 - Live smoke verification opened 4,967 indexed chunks, streamed the 597,845-byte citation PDF, rejected unauthenticated paid routes, and rendered the production workspace.
 - A real UI request returned NVIDIA Q3 FY26 revenue of $57.0 billion with six validated citations; the evidence ledger showed page/line provenance and the highlighted viewer loaded successfully.
 - Post-deployment log audit found zero error entries for either new Cloud Run revision, and the deployed-page browser console contained no errors.
+
+## 2026-09-15 Gemini model migration
+
+- [x] Audit current model settings and provider lifecycle documentation.
+- [x] Receive implementation and pull-request approval from Arjun.
+- [x] Migrate the Vertex default and both deployment configurations, update the Gen AI SDK, and repair the unavailable OpenRouter Pro mapping.
+- [x] Run relevant tests and bounded provider smoke checks.
+- [x] Review the diff and prepare the pull request.
+
+### Review
+
+Runtime settings and both Cloud Build configurations still select Gemini 2.5 Flash. Move them to GA Gemini 3.5 Flash-Lite, use the Google Gen AI 2.x SDK, and omit the custom temperature that Flash-Lite does not support. Also route the existing OpenRouter Pro alias and fallback cost estimate to the available Gemini 3.1 Pro endpoint.
+
+All 64 existing tests passed. Required Ruff lint and formatting checks passed. A live Vertex request returned the correct answer and evidence citation. OpenRouter alias/cost checks and a live Gemini 3.1 Pro request passed. Syntax and diff checks passed.
+
+Existing Cloud Run revisions retain their old environment settings until deployed with an updated Cloud Build configuration.
